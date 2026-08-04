@@ -96,8 +96,8 @@ const program = Effect.gen(function* () {
   yield* command("pnpm", ["build"]);
   yield* command("git", ["add", "package.json", "CHANGELOG.md", ".changes"]);
   yield* command("git", ["commit", "-m", `chore(release): ${tag}`]);
-  yield* command("git", ["tag", tag]);
-  yield* command("git", ["push", "origin", "main", "--follow-tags"]);
+  yield* command("git", ["tag", "--annotate", tag, "--message", tag]);
+  yield* command("git", ["push", "origin", "main", tag]);
   yield* command("npm", ["publish", "--provenance", "--access", "public"]);
 
   const releaseNotes = join(root, `.release-notes-${version}.md`);
