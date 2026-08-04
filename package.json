@@ -31,6 +31,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
+    "example:basic": "tsx examples/basic.ts",
     "release": "tsx scripts/release.ts",
     "release:dry": "tsx scripts/release.ts --dry-run",
     "typecheck": "tsc --noEmit",
