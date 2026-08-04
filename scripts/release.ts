@@ -81,7 +81,8 @@ const program = Effect.gen(function* () {
   const version = bump(packageJson.version, type);
   const tag = `v${version}`;
   const date = new Date().toISOString().slice(0, 10);
-  const entry = `## ${version} — ${date}\n\n${changes.map((change) => `- ${change.summary}`).join("\n")}\n\n`;
+  const notes = changes.map((change) => `- ${change.summary}`).join("\n");
+  const entry = `## ${version} — ${date}\n\n${notes}\n\n`;
   const existing = yield* read(changelogPath).pipe(
     Effect.catchTag("ReleaseError", () => Effect.succeed("# Changelog\n"))
   );
@@ -101,7 +102,7 @@ const program = Effect.gen(function* () {
   yield* command("npm", ["publish", "--provenance", "--access", "public"]);
 
   const releaseNotes = join(root, `.release-notes-${version}.md`);
-  yield* write(releaseNotes, entry);
+  yield* write(releaseNotes, `## What's Changed\n\n${notes}\n`);
   yield* command("gh", ["release", "create", tag, "--title", tag, "--notes-file", releaseNotes]);
   yield* remove(releaseNotes);
   yield* Effect.sync(() => console.log(`Released ${tag}.`));
