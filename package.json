@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "description": "A typed TypeScript SDK for extracting public data from YouTube.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spheceo/just-yt.git"
+  },
   "keywords": [
     "youtube",
     "youtube-api",
@@ -22,6 +26,9 @@
     }
   },
   "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "release": "tsx scripts/release.ts",

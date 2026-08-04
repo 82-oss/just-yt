@@ -14,18 +14,18 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, 'chore(release):') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: pnpm/action-setup@v4
         with:
           version: 10
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm release
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ github.token }}
