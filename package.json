@@ -1,0 +1,41 @@
+{
+  "name": "just-yt",
+  "version": "0.0.1",
+  "description": "A typed TypeScript SDK for extracting public data from YouTube.",
+  "license": "MIT",
+  "keywords": [
+    "youtube",
+    "youtube-api",
+    "youtube-scraper",
+    "youtube-transcript",
+    "typescript",
+    "sdk"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "release": "tsx scripts/release.ts",
+    "release:dry": "tsx scripts/release.ts --dry-run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm typecheck && pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.5",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "effect": "^3.22.1"
+  }
+}
