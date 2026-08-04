@@ -8,3 +8,7 @@
 
 - Streamline the README to document only the current project status and development setup.
 
+## 0.0.4 — 2026-08-04
+
+- Make automated releases resilient to overlapping workflow runs and ensure release tags are pushed explicitly.
+
