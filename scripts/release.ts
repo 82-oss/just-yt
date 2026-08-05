@@ -49,6 +49,35 @@ const bump = (version: string, type: ReleaseType) => {
 
 const rank: Record<ReleaseType, number> = { patch: 1, minor: 2, major: 3 };
 
+const compareVersionsDescending = (left: string, right: string) => {
+  const leftParts = left.split(".").map(Number);
+  const rightParts = right.split(".").map(Number);
+
+  for (let index = 0; index < 3; index += 1) {
+    const difference = (rightParts[index] ?? 0) - (leftParts[index] ?? 0);
+    if (difference !== 0) return difference;
+  }
+
+  return 0;
+};
+
+const sortChangelog = (contents: string) => {
+  const headingPattern = /^## (\d+\.\d+\.\d+)(?:\s+—.*)?$/gm;
+  const matches = [...contents.matchAll(headingPattern)];
+  if (matches.length < 2) return contents.trimEnd() + "\n";
+
+  const preamble = contents.slice(0, matches[0].index).trimEnd();
+  const entries = matches.map((match, index) => ({
+    version: match[1],
+    content: contents
+      .slice(match.index, matches[index + 1]?.index ?? contents.length)
+      .trim()
+  }));
+
+  entries.sort((left, right) => compareVersionsDescending(left.version, right.version));
+  return `${preamble}\n\n${entries.map((entry) => entry.content).join("\n\n")}\n`;
+};
+
 const program = Effect.gen(function* () {
   const files = (yield* Effect.tryPromise({
     try: () => readdir(changesDir),
@@ -91,7 +120,7 @@ const program = Effect.gen(function* () {
   if (dryRun) return;
 
   yield* write(packagePath, `${JSON.stringify({ ...packageJson, version }, null, 2)}\n`);
-  yield* write(changelogPath, `${existing.trimEnd()}\n\n${entry}`.replace("# Changelog\n\n\n", "# Changelog\n\n"));
+  yield* write(changelogPath, sortChangelog(`${existing.trimEnd()}\n\n${entry}`));
   yield* Effect.forEach(changes, (change) => remove(join(changesDir, change.file)));
 
   yield* command("pnpm", ["build"]);
