@@ -1,42 +1,45 @@
 /**
  * just-yt — a typed SDK for extracting public data from YouTube.
  *
- * Two ways in:
- *
  * ```ts
- * // Promise API
- * import { createClient } from "just-yt";
- * const yt = await createClient();
- * const video = await yt.getVideo("dQw4w9WgXcQ");
+ * import { YouTube } from "just-yt";
+ *
+ * const yt = new YouTube();
+ *
+ * const video = await yt.video("https://www.youtube.com/watch?v=jNQXAC9IVRw");
+ * const results = await yt.search("effect ts", { type: "video", limit: 50 });
+ * const lines = await yt.transcript("dQw4w9WgXcQ");
+ * const channel = await yt.channel("@veritasium");
  * ```
  *
+ * The same functionality is available as an Effect service:
+ *
  * ```ts
- * // Effect API
  * import { Effect } from "effect";
- * import { YouTube, layer } from "just-yt";
+ * import { YouTubeApi, layer } from "just-yt";
  *
  * const program = Effect.gen(function* () {
- *   const yt = yield* YouTube;
- *   return yield* yt.getVideo("dQw4w9WgXcQ");
+ *   const yt = yield* YouTubeApi;
+ *   return yield* yt.video("dQw4w9WgXcQ");
  * });
  *
  * Effect.runPromise(program.pipe(Effect.provide(layer())));
  * ```
  */
 
-export { Client, createClient, type SearchAllOptions } from "./client.js";
+export { YouTube } from "./youtube.js";
 
 export {
   Config,
   resolveConfig,
-  type ClientOptions,
   type FetchFn,
   type ResolvedConfig,
+  type YouTubeOptions,
 } from "./config.js";
 
 export {
-  YouTube,
-  YouTubeLive,
+  YouTubeApi,
+  YouTubeApiLive,
   layer,
   type SearchFilters,
   type SearchOptions,
@@ -45,7 +48,7 @@ export {
   type YouTubeError,
   type YouTubeService,
   type YouTubeStack,
-} from "./youtube.js";
+} from "./api.js";
 
 export type {
   AuthorRef,

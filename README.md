@@ -13,35 +13,51 @@ pnpm add just-yt
 ## Usage
 
 ```ts
-import { createClient } from "just-yt";
+import { YouTube } from "just-yt";
 
-const yt = await createClient();
+const yt = new YouTube();
 
-// Search, with filters and pagination
-const page = await yt.search("effect ts", { type: "video", uploadDate: "week" });
-const many = await yt.searchAll("effect ts", { limit: 100 });
-
-// Video details
-const video = await yt.getVideo("https://www.youtube.com/watch?v=jNQXAC9IVRw");
+// Videos — id, watch URL, youtu.be, /shorts/, /embed/, /live/
+const video = await yt.video("https://www.youtube.com/watch?v=jNQXAC9IVRw");
 video.title; // "Me at the zoo"
 video.viewCount; // 403130789
 video.likeCount; // 19300458
 video.channel.handle; // "@jawed"
 
+// Search — one page by default, or set a limit to follow continuations
+const page = await yt.search("effect ts", { type: "video", uploadDate: "week" });
+const many = await yt.search("effect ts", { limit: 100 });
+const more = await yt.search("effect ts", { continuation: page.continuation });
+
 // Transcripts
-const transcript = await yt.getTranscript("dQw4w9WgXcQ", { language: "en" });
+const transcript = await yt.transcript("dQw4w9WgXcQ", { language: "en" });
 transcript.text; // full text
 transcript.segments; // [{ startMs, endMs, startSeconds, endSeconds, text }, …]
 
 // Channels — by handle, id, or URL
-const channel = await yt.getChannel("@veritasium");
+const channel = await yt.channel("@veritasium");
 channel.subscriberCount; // 21100000
 channel.joinedDateText; // "Joined Jul 21, 2010"
+
+// Autocomplete
+const suggestions = await yt.suggestions("effect t");
 
 await yt.close();
 ```
 
-Create one client and reuse it: session creation costs a couple of network round-trips, and YouTube treats a session whose identity drifts between requests with suspicion.
+The constructor does no I/O — the Innertube session is established on the first call. Create one instance and keep it: YouTube treats a session whose identity drifts between requests with suspicion, and every instance is a new session.
+
+Options go on the constructor:
+
+```ts
+const yt = new YouTube({
+  lang: "es",
+  location: "ES",
+  fetch: myProxiedFetch, // how you route through a proxy today
+  timeoutMillis: 30_000,
+  retries: 3,
+});
+```
 
 ### Effect API
 
@@ -49,12 +65,12 @@ The same functionality, as a service:
 
 ```ts
 import { Effect } from "effect";
-import { YouTube, layer } from "just-yt";
+import { YouTubeApi, layer } from "just-yt";
 
 const program = Effect.gen(function* () {
-  const yt = yield* YouTube;
+  const yt = yield* YouTubeApi;
 
-  return yield* yt.getVideo("dQw4w9WgXcQ").pipe(
+  return yield* yt.video("dQw4w9WgXcQ").pipe(
     Effect.catchTag("UnavailableError", (error) =>
       Effect.succeed(`unavailable: ${error.reason}`),
     ),
@@ -70,7 +86,7 @@ Effect.runPromise(program.pipe(Effect.provide(layer())));
 const raw = yield* (yield* Innertube).execute("/browse", { browseId: "UC…" });
 ```
 
-Search pagination is available as a `Stream`:
+Search results are also available as a `Stream`:
 
 ```ts
 yt.searchStream("effect ts", { type: "video" }).pipe(

@@ -6,7 +6,7 @@ export type FetchFn = (
   init?: RequestInit,
 ) => Promise<Response>;
 
-export interface ClientOptions {
+export interface YouTubeOptions {
   /** Interface language, sent as `hl`. Defaults to `"en"`. */
   readonly lang?: string;
   /** Geolocation, sent as `gl`. Defaults to `"US"`. */
@@ -77,7 +77,7 @@ const defaultTimezone = (): string => {
 const randomUserAgent = (): string =>
   DESKTOP_USER_AGENTS[Math.floor(Math.random() * DESKTOP_USER_AGENTS.length)];
 
-export const resolveConfig = (options: ClientOptions = {}): ResolvedConfig => ({
+export const resolveConfig = (options: YouTubeOptions = {}): ResolvedConfig => ({
   lang: options.lang ?? "en",
   location: options.location ?? "US",
   timezone: options.timezone ?? defaultTimezone(),
@@ -98,6 +98,6 @@ export class Config extends Context.Tag("just-yt/Config")<
   Config,
   ResolvedConfig
 >() {
-  static readonly layer = (options: ClientOptions = {}): Layer.Layer<Config> =>
+  static readonly layer = (options: YouTubeOptions = {}): Layer.Layer<Config> =>
     Layer.succeed(Config, resolveConfig(options));
 }
