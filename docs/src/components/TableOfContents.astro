@@ -1,0 +1,131 @@
+---
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+// Only h2/h3 — deeper levels make the rail noisy without helping anyone navigate.
+const headings = Astro.props.headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+{
+  headings.length > 1 && (
+    <nav class="toc" aria-label="On this page">
+      <p class="toc-heading">On this page</p>
+      <ul>
+        {headings.map((heading) => (
+          <li class:list={{ nested: heading.depth === 3 }}>
+            <a href={`#${heading.slug}`} data-toc-link>
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+<style>
+  .toc {
+    position: sticky;
+    top: calc(var(--topbar-h) + 24px);
+    max-height: calc(100vh - var(--topbar-h) - 48px);
+    overflow-y: auto;
+    font-size: var(--text-sm);
+  }
+
+  .toc-heading {
+    margin: 0 0 10px;
+    padding-left: 13px;
+    color: var(--muted);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--line);
+  }
+
+  li.nested a {
+    padding-left: 26px;
+  }
+
+  a {
+    display: block;
+    padding: 5px 12px;
+    margin-left: -1px;
+    border-left: 1px solid transparent;
+    color: var(--muted);
+    line-height: 1.45;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  a:hover {
+    color: var(--text);
+  }
+
+  a.active {
+    border-left-color: var(--accent);
+    color: var(--accent);
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')];
+
+  if (links.length > 0) {
+    const sections = links
+      .map((link) => ({ link, heading: document.getElementById(decodeURIComponent(link.hash.slice(1))) }))
+      .filter((section): section is { link: HTMLAnchorElement; heading: HTMLElement } => section.heading !== null);
+
+    /**
+     * Exactly one link is always active. An IntersectionObserver alone leaves
+     * the rail blank whenever no heading happens to be inside the root margin —
+     * between two long sections, or above the first heading — so instead we pick
+     * the last heading that has passed the activation line.
+     */
+    const activate = () => {
+      const topbar = (document.querySelector('.topbar') as HTMLElement | null)?.offsetHeight ?? 0;
+      const activationLine = topbar + 120;
+
+      const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2;
+
+      let current = sections[0];
+      if (atBottom) {
+        current = sections[sections.length - 1];
+      } else {
+        for (const section of sections) {
+          if (section.heading.getBoundingClientRect().top <= activationLine) current = section;
+          else break;
+        }
+      }
+
+      for (const section of sections) {
+        section.link.classList.toggle('active', section === current);
+      }
+    };
+
+    let queued = false;
+    const schedule = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        activate();
+      });
+    };
+
+    addEventListener('scroll', schedule, { passive: true });
+    addEventListener('resize', schedule);
+    activate();
+  }
+</script>

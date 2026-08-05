@@ -1,0 +1,87 @@
+---
+import type { MarkdownHeading } from 'astro';
+import BaseLayout from './BaseLayout.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  headings?: MarkdownHeading[];
+}
+
+const { title, description, headings = [] } = Astro.props;
+
+const showToc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3).length > 1;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class:list={['shell', { 'with-toc': showToc }]}>
+    <main id="main">
+      <slot />
+    </main>
+
+    {
+      showToc && (
+        <aside class="toc-rail">
+          <div class="toc-pin">
+            <TableOfContents headings={headings} />
+          </div>
+        </aside>
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(40px, 6vw, 80px);
+    padding: clamp(32px, 5vh, 56px) var(--content-pad) 88px;
+  }
+
+  .shell.with-toc {
+    grid-template-columns: minmax(0, 1fr) var(--toc-w);
+  }
+
+  /* The grid column only reserves the width; the rail itself is pinned to the
+     viewport so "On this page" holds perfectly still when the sidebar toggles
+     and the article re-centres around it. */
+  .toc-pin {
+    position: fixed;
+    top: calc(var(--topbar-h) + 24px);
+    right: var(--content-pad);
+    width: var(--toc-w);
+  }
+
+  main {
+    min-width: 0;
+    max-width: var(--content-max);
+    /* Keeps the article centred in the leftover space instead of hugging the
+       sidebar, so wide screens don't read as lopsided. */
+    margin-inline: auto;
+  }
+
+  /* The table of contents goes first — the page content matters more. The
+     open sidebar eats 280px of viewport, so the cutoff shifts with its state
+     rather than pretending the whole window is available. */
+  @media (max-width: 1023px) {
+    .shell.with-toc {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .toc-rail {
+      display: none;
+    }
+  }
+
+  @media (max-width: 1319px) {
+    :global(:root:not([data-sidebar='collapsed'])) .shell.with-toc {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    :global(:root:not([data-sidebar='collapsed'])) .toc-rail {
+      display: none;
+    }
+  }
+</style>

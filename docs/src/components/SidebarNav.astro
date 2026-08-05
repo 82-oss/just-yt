@@ -1,0 +1,95 @@
+---
+import { docHref, type DocGroup } from '../lib/docs';
+
+interface Props {
+  groups: DocGroup[];
+  pathname: string;
+}
+
+const { groups, pathname } = Astro.props;
+const current = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
+---
+
+<nav class="doc-nav" aria-label="Documentation">
+  {
+    groups.map((group) => (
+      <div class="group">
+        <p class="group-heading">{group.name}</p>
+        <ul>
+          {group.docs.map((doc) => {
+            const href = docHref(doc);
+            const active = current === href;
+            return (
+              <li>
+                <a href={href} class:list={['link', { active }]} aria-current={active ? 'page' : undefined}>
+                  {doc.data.title}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))
+  }
+</nav>
+
+<style>
+  .doc-nav {
+    font-size: var(--text-base);
+  }
+
+  .group + .group {
+    margin-top: 32px;
+  }
+
+  .group-heading {
+    margin: 0 0 10px;
+    padding-inline: 12px;
+    color: var(--muted);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .link {
+    position: relative;
+    display: block;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    color: var(--muted);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .link:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  .link.active {
+    background: var(--surface-hover);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* A short accent bar marks the current page even when the pill tint is
+     subtle against the panel surface. */
+  .link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    bottom: 9px;
+    width: 2px;
+    border-radius: 1px;
+    background: var(--accent);
+  }
+</style>

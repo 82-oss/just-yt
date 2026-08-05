@@ -1,0 +1,83 @@
+---
+import { docHref, type Doc } from '../lib/docs';
+
+interface Props {
+  prev?: Doc;
+  next?: Doc;
+}
+
+const { prev, next } = Astro.props;
+---
+
+{
+  (prev || next) && (
+    <nav class="pager" aria-label="Page navigation">
+      {prev ? (
+        <a class="card prev" href={docHref(prev)} rel="prev">
+          <span class="direction">← Previous</span>
+          <span class="label">{prev.data.title}</span>
+        </a>
+      ) : (
+        <span />
+      )}
+
+      {next && (
+        <a class="card next" href={docHref(next)} rel="next">
+          <span class="direction">Next →</span>
+          <span class="label">{next.data.title}</span>
+        </a>
+      )}
+    </nav>
+  )
+}
+
+<style>
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    max-width: var(--content-max);
+    margin-top: 72px;
+    padding-top: 36px;
+    border-top: 1px solid var(--line);
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  .next {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .direction {
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+
+  .label {
+    color: var(--text);
+    font-size: var(--text-base);
+    font-weight: 600;
+  }
+
+  @media (max-width: 560px) {
+    .pager {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

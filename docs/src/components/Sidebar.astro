@@ -1,0 +1,112 @@
+---
+import Logo from './Logo.astro';
+import SearchTrigger from './SearchTrigger.astro';
+import SidebarNav from './SidebarNav.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import type { DocGroup } from '../lib/docs';
+
+interface Props {
+  groups: DocGroup[];
+  pathname: string;
+}
+
+const { groups, pathname } = Astro.props;
+---
+
+{/* Stays mounted at every width — collapsing slides it out, the content
+    animates across the space it leaves, and below 1000px the same panel is
+    the mobile drawer. */}
+<aside class="sidebar" id="docs-sidebar">
+  <div class="head">
+    <a class="brand" href="/docs/getting-started" aria-label="just-yt home">
+      <Logo />
+    </a>
+    <ThemeToggle />
+  </div>
+
+  <div class="search-slot">
+    <SearchTrigger />
+  </div>
+
+  <div class="scroller">
+    <SidebarNav groups={groups} pathname={pathname} />
+  </div>
+
+  <footer class="foot">
+    <a href="https://github.com/spheceo/just-yt" rel="noreferrer noopener" target="_blank">GitHub</a>
+    <span>v0.0.5 · MIT</span>
+  </footer>
+</aside>
+
+<style>
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-w);
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  /* Desktop toggling is instant — the panel just appears or disappears, so
+     nothing on the page slides around. */
+  :global(:root[data-sidebar='collapsed']) .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex: none;
+    height: var(--topbar-h);
+    padding: 0 var(--sidebar-pad);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .search-slot {
+    flex: none;
+    padding: 8px var(--sidebar-pad) 20px;
+  }
+
+  .scroller {
+    flex: 1;
+    min-height: 0;
+    padding: 0 calc(var(--sidebar-pad) - 10px) 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex: none;
+    padding: 12px var(--sidebar-pad);
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+
+  .foot a:hover {
+    color: var(--text);
+  }
+
+  /* As a drawer the panel floats above the content, slides, and casts a
+     shadow — the only place the open/close motion survives. */
+  @media (max-width: 1000px) {
+    .sidebar {
+      box-shadow: var(--shadow);
+      transition: transform var(--duration) var(--ease);
+    }
+  }
+</style>

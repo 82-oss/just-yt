@@ -33,6 +33,8 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
+    "docs:dev": "pnpm --filter just-yt-docs dev",
+    "docs:build": "pnpm --filter just-yt-docs build",
     "example:basic": "tsx examples/basic.ts",
     "release": "tsx scripts/release.ts",
     "release:dry": "tsx scripts/release.ts --dry-run",

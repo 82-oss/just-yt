@@ -1,0 +1,167 @@
+---
+import { Font } from 'astro:assets';
+import Logo from '../components/Logo.astro';
+import SearchDialog from '../components/SearchDialog.astro';
+import Sidebar from '../components/Sidebar.astro';
+import SidebarToggle from '../components/SidebarToggle.astro';
+import { getDocGroups } from '../lib/docs';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+
+const groups = await getDocGroups();
+const pathname = Astro.url.pathname;
+const canonical = new URL(pathname, Astro.site ?? Astro.url.origin);
+const pageTitle = `${title} — just-yt`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="just-yt" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+
+    <Font cssVariable="--font-sans" preload />
+    <Font cssVariable="--font-mono" />
+
+    {/* Restores theme and sidebar state before first paint: no flash, and no
+        transition fires because the value never changes after styles resolve.
+        The drawer always starts closed on small screens. */}
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        try {
+          const theme = localStorage.getItem('just-yt-theme');
+          root.dataset.theme =
+            theme === 'light' || theme === 'dark'
+              ? theme
+              : matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark';
+          const collapsed =
+            matchMedia('(max-width: 1000px)').matches || localStorage.getItem('just-yt-sidebar') === 'collapsed';
+          root.dataset.sidebar = collapsed ? 'collapsed' : 'expanded';
+        } catch {
+          root.dataset.theme = 'dark';
+          root.dataset.sidebar = 'expanded';
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <Sidebar groups={groups} pathname={pathname} />
+    <div class="scrim" data-sidebar-scrim aria-hidden="true"></div>
+    <SearchDialog />
+
+    <div class="content">
+      <div class="topbar">
+        <SidebarToggle />
+        <a class="topbar-brand" href="/docs/getting-started" aria-label="just-yt home">
+          <Logo />
+        </a>
+      </div>
+
+      <slot />
+
+      <footer class="site-footer">
+        <span>just-yt v0.0.5</span>
+        <span>MIT license</span>
+      </footer>
+    </div>
+
+    <style>
+      .content {
+        /* Toggling is instant on desktop — a slide here would drag the whole
+           page across the screen. Only the mobile drawer animates. */
+        padding-left: var(--sidebar-w);
+      }
+
+      :root[data-sidebar='collapsed'] .content {
+        padding-left: 0;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: var(--topbar-h);
+        padding: 0 var(--content-pad);
+        background: color-mix(in srgb, var(--bg) 85%, transparent);
+        backdrop-filter: blur(12px);
+      }
+
+      /* The sidebar already shows the logo whenever it's on screen. */
+      .topbar-brand {
+        display: none;
+      }
+
+      :root[data-sidebar='collapsed'] .topbar-brand {
+        display: flex;
+        align-items: center;
+      }
+
+      .scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 45;
+        background: var(--backdrop);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--duration) var(--ease);
+      }
+
+      .site-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 32px;
+        padding: 24px var(--content-pad);
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: var(--text-xs);
+      }
+
+      @media (max-width: 1000px) {
+        /* The panel becomes an overlay, so the content stops reserving space. */
+        .content {
+          padding-left: 0;
+        }
+
+        .topbar-brand {
+          display: flex;
+          align-items: center;
+        }
+
+        :root:not([data-sidebar='collapsed']) .scrim {
+          opacity: 1;
+          pointer-events: auto;
+        }
+      }
+    </style>
+  </body>
+</html>
