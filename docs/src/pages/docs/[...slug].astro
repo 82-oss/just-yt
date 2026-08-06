@@ -1,57 +1,18 @@
 ---
-import { render } from 'astro:content';
-import Pager from '../../components/Pager.astro';
-import DocsLayout from '../../layouts/DocsLayout.astro';
-import { getPager, getSortedDocs } from '../../lib/docs';
+import DocPage from '../../components/DocPage.astro';
+import { getSortedDocs, HOME_DOC_ID } from '../../lib/docs';
 
 export async function getStaticPaths() {
   const docs = await getSortedDocs();
-  return docs.map((doc) => ({
-    params: { slug: doc.id },
-    props: { doc },
-  }));
+  return docs
+    // The first doc lives at `/` (src/pages/index.astro). Building it here too
+    // would give it two URLs, and shadow the redirect that keeps its old one
+    // working.
+    .filter((doc) => doc.id !== HOME_DOC_ID)
+    .map((doc) => ({ params: { slug: doc.id }, props: { doc } }));
 }
 
 const { doc } = Astro.props;
-const { Content, headings } = await render(doc);
-
-const docs = await getSortedDocs();
-const { prev, next } = getPager(docs, doc);
 ---
 
-<DocsLayout title={doc.data.title} description={doc.data.description} headings={headings}>
-  <article>
-    <header class="doc-header">
-      <h1>{doc.data.title}</h1>
-      <p class="lead">{doc.data.description}</p>
-    </header>
-
-    <div class="prose">
-      <Content />
-    </div>
-  </article>
-
-  <Pager prev={prev} next={next} />
-</DocsLayout>
-
-<style>
-  .doc-header {
-    max-width: var(--content-max);
-    margin-bottom: 48px;
-    padding-bottom: 32px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  h1 {
-    margin: 0 0 14px;
-    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    line-height: 1.15;
-  }
-
-  .lead {
-    margin: 0;
-    max-width: 60ch;
-  }
-</style>
+<DocPage doc={doc} />

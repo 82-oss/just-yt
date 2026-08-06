@@ -5,13 +5,23 @@ export type Doc = CollectionEntry<'docs'>;
 /** Sidebar sections, in the order they should appear. */
 export const GROUP_ORDER = ['Documentation', 'Explore'];
 
+/**
+ * The doc served at `/` by src/pages/index.astro rather than under `/docs/`.
+ *
+ * The site is documentation and nothing else, so the front page is the first
+ * page — not a redirect to it. `getSortedDocs` asserts this is still the doc
+ * that sorts first, because a reordering that leaves `/` pointing at page four
+ * is not something anyone would notice from the sidebar.
+ */
+export const HOME_DOC_ID = 'getting-started';
+
 export interface DocGroup {
   name: string;
   docs: Doc[];
 }
 
 export function docHref(doc: Doc): string {
-  return `/docs/${doc.id}`;
+  return doc.id === HOME_DOC_ID ? '/' : `/docs/${doc.id}`;
 }
 
 function byGroupThenOrder(a: Doc, b: Doc): number {
@@ -30,7 +40,16 @@ function groupRank(group: string): number {
 /** Every doc in reading order — the order the pager walks through. */
 export async function getSortedDocs(): Promise<Doc[]> {
   const docs = await getCollection('docs');
-  return docs.sort(byGroupThenOrder);
+  docs.sort(byGroupThenOrder);
+
+  if (docs[0]?.id !== HOME_DOC_ID) {
+    throw new Error(
+      `HOME_DOC_ID is "${HOME_DOC_ID}" but "${docs[0]?.id}" now sorts first. ` +
+        'Update HOME_DOC_ID in src/lib/docs.ts, or restore the order, so `/` keeps serving the opening page.',
+    );
+  }
+
+  return docs;
 }
 
 /** The same docs, bucketed into sidebar sections. */

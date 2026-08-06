@@ -2,8 +2,11 @@
  * Design tokens.
  *
  * The interface is monochrome — the accent is simply the foreground colour, so
- * emphasis comes from contrast and weight rather than hue. The only colour on
- * the page is in code blocks, which keep their own palette (src/lib/code-theme.mjs).
+ * emphasis comes from contrast and weight rather than hue. Two things are
+ * allowed colour: code blocks, which keep their own palette
+ * (src/lib/code-theme.mjs), and callout tones, where the hue *is* the meaning —
+ * a warning that looks like every other panel isn't a warning. Tones appear
+ * only on a callout's icon, rule and faint wash; body text stays neutral.
  *
  * `--font-sans` and `--font-mono` are defined by Astro's font pipeline; see the
  * `fonts` block in astro.config.mjs.
@@ -14,8 +17,10 @@
   --bg: #000000;
   --surface: #0a0a0a;
   --surface-hover: #171717;
+  --surface-raised: #121212;
   --text: #ededed;
   --muted: #a1a1a1;
+  --faint: #6e6e6e;
   --line: #1f1f1f;
   --line-strong: #2e2e2e;
   --accent: #ffffff;
@@ -24,7 +29,14 @@
   --soft: #101010;
   --code: #0a0a0a;
   --shadow: 0 16px 48px rgb(0 0 0 / 0.6);
+  --shadow-sm: 0 2px 8px rgb(0 0 0 / 0.5);
   --backdrop: rgb(0 0 0 / 0.6);
+
+  /* Callout tones — desaturated so they read as ink, not as UI chrome. */
+  --tone-note: #7ea6ff;
+  --tone-tip: #4ec9a0;
+  --tone-warning: #e0b341;
+  --tone-danger: #f2707a;
 
   /* Type */
   --text-xs: 0.75rem;
@@ -35,22 +47,23 @@
   --text-xl: 1.375rem;
 
   /* Layout */
-  --sidebar-w: 280px;
+  --sidebar-w: 276px;
   --topbar-h: 56px;
   --toc-w: 220px;
   --content-max: 720px;
   --content-pad: clamp(24px, 5vw, 72px);
-  --sidebar-pad: 20px;
+  --sidebar-pad: 18px;
 
   /* Shape */
-  --radius-sm: 5px;
-  --radius: 8px;
-  --radius-lg: 12px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-pill: 999px;
 
   /* Motion — one duration and curve so the panel and content stay in step. */
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
-  --duration: 340ms;
+  --duration: 320ms;
 
   color-scheme: dark;
 }
@@ -59,8 +72,10 @@
   --bg: #ffffff;
   --surface: #fafafa;
   --surface-hover: #f2f2f2;
+  --surface-raised: #ffffff;
   --text: #171717;
   --muted: #5f5f5f;
+  --faint: #8a8a8a;
   --line: #ebebeb;
   --line-strong: #d4d4d4;
   --accent: #171717;
@@ -69,7 +84,13 @@
   --soft: #f5f5f5;
   --code: #fafafa;
   --shadow: 0 16px 40px rgb(0 0 0 / 0.1);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.08);
   --backdrop: rgb(0 0 0 / 0.25);
+
+  --tone-note: #2563eb;
+  --tone-tip: #0f7a5a;
+  --tone-warning: #a35c07;
+  --tone-danger: #c2323c;
 
   color-scheme: light;
 }

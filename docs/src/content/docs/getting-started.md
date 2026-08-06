@@ -14,8 +14,10 @@ Google Cloud project or supply an API key. It talks to the same internal
 Innertube service used by YouTube's own clients and turns the changing response
 format into stable, typed objects.
 
-> **Use it for public data only.** The SDK does not sign in, read private or
-> members-only content, download media, or bypass YouTube's access controls.
+:::caution{title="Public data only"}
+The SDK does not sign in, read private or members-only content, download media,
+or bypass YouTube's access controls.
+:::
 
 ## What you need
 
@@ -25,17 +27,23 @@ runtimes provide these APIs.
 
 Install the package with your preferred package manager:
 
-```bash
+:::tabs
+```bash title="npm"
 npm install just-yt
 ```
 
-```bash
+```bash title="pnpm"
 pnpm add just-yt
 ```
 
-```bash
+```bash title="yarn"
+yarn add just-yt
+```
+
+```bash title="bun"
 bun add just-yt
 ```
+:::
 
 The package includes its own TypeScript declarations. You do not need an
 additional `@types` package.

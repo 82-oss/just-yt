@@ -1,0 +1,53 @@
+---
+import { render } from 'astro:content';
+import Pager from './Pager.astro';
+import DocsLayout from '../layouts/DocsLayout.astro';
+import { getPager, getSortedDocs, type Doc } from '../lib/docs';
+
+// One doc, rendered the same way whether it is reached at `/` or under
+// `/docs/`. Shared so the front page can never drift from the rest of them.
+interface Props {
+  doc: Doc;
+}
+
+const { doc } = Astro.props;
+const { Content, headings } = await render(doc);
+const { prev, next } = getPager(await getSortedDocs(), doc);
+---
+
+<DocsLayout title={doc.data.title} description={doc.data.description} headings={headings}>
+  <article>
+    <header class="doc-header">
+      <h1>{doc.data.title}</h1>
+      <p class="lead">{doc.data.description}</p>
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+
+  <Pager prev={prev} next={next} />
+</DocsLayout>
+
+<style>
+  .doc-header {
+    max-width: var(--content-max);
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h1 {
+    margin: 0 0 14px;
+    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+
+  .lead {
+    margin: 0;
+    max-width: 60ch;
+  }
+</style>

@@ -1,6 +1,7 @@
 ---
 import type { MarkdownHeading } from 'astro';
 import BaseLayout from './BaseLayout.astro';
+import CodeChrome from '../components/CodeChrome.astro';
 import TableOfContents from '../components/TableOfContents.astro';
 
 interface Props {
@@ -23,13 +24,13 @@ const showToc = headings.filter((heading) => heading.depth === 2 || heading.dept
     {
       showToc && (
         <aside class="toc-rail">
-          <div class="toc-pin">
-            <TableOfContents headings={headings} />
-          </div>
+          <TableOfContents headings={headings} />
         </aside>
       )
     }
   </div>
+
+  <CodeChrome />
 </BaseLayout>
 
 <style>
@@ -44,17 +45,11 @@ const showToc = headings.filter((heading) => heading.depth === 2 || heading.dept
     grid-template-columns: minmax(0, 1fr) var(--toc-w);
   }
 
-  /* The grid column only reserves the width; the rail itself is pinned to the
-     viewport so "On this page" holds perfectly still when the sidebar toggles
-     and the article re-centres around it. */
-  .toc-pin {
-    position: fixed;
-    top: calc(var(--topbar-h) + 24px);
-    right: var(--content-pad);
-    width: var(--toc-w);
-  }
-
   main {
+    /* Explicit, because the auto margins below opt the grid item out of
+       stretching: without it the article is shrink-to-fit and overflows the
+       column on narrow screens instead of wrapping inside it. */
+    width: 100%;
     min-width: 0;
     max-width: var(--content-max);
     /* Keeps the article centred in the leftover space instead of hugging the
@@ -62,25 +57,18 @@ const showToc = headings.filter((heading) => heading.depth === 2 || heading.dept
     margin-inline: auto;
   }
 
-  /* The table of contents goes first — the page content matters more. The
-     open sidebar eats 280px of viewport, so the cutoff shifts with its state
-     rather than pretending the whole window is available. */
-  @media (max-width: 1023px) {
+  /*
+   * The table of contents goes first — the page content matters more. The
+   * cutoff is the width at which the sidebar, a full-measure article and the
+   * rail all fit; the sidebar is permanent now, so it is a single fixed number
+   * rather than something that moves with a panel's state.
+   */
+  @media (max-width: 1279px) {
     .shell.with-toc {
       grid-template-columns: minmax(0, 1fr);
     }
 
     .toc-rail {
-      display: none;
-    }
-  }
-
-  @media (max-width: 1319px) {
-    :global(:root:not([data-sidebar='collapsed'])) .shell.with-toc {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    :global(:root:not([data-sidebar='collapsed'])) .toc-rail {
       display: none;
     }
   }

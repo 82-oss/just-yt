@@ -10,6 +10,8 @@ const { groups, pathname } = Astro.props;
 const current = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
 ---
 
+{/* Labels only. Five pages don't need glyphs to tell them apart, and a column
+    of icons reads as decoration next to titles that already say the thing. */}
 <nav class="doc-nav" aria-label="Documentation">
   {
     groups.map((group) => (
@@ -34,36 +36,38 @@ const current = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
 </nav>
 
 <style>
-  .doc-nav {
-    font-size: var(--text-base);
-  }
-
   .group + .group {
-    margin-top: 32px;
+    margin-top: 26px;
   }
 
   .group-heading {
-    margin: 0 0 10px;
+    margin: 0 0 6px;
     padding-inline: 12px;
-    color: var(--muted);
-    font-size: var(--text-xs);
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    color: var(--faint);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
   }
 
   ul {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   .link {
-    position: relative;
     display: block;
-    padding: 8px 12px;
+    overflow: hidden;
+    padding: 7px 12px;
     border-radius: var(--radius);
     color: var(--muted);
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
     transition:
       background-color 0.15s ease,
       color 0.15s ease;
@@ -74,22 +78,17 @@ const current = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
     color: var(--text);
   }
 
+  /*
+   * The current page is a filled pill with a hairline ring. The ring is what
+   * separates it from a hovered item — on a panel this dark the fill alone is
+   * too close a match to read as "you are here" once the pointer moves away.
+   */
   .link.active {
     background: var(--surface-hover);
-    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--text);
+    /* 600, not 550 — only 400/500/600/700 are loaded, so anything else is a
+       synthesised weight that renders slightly heavier than it should. */
     font-weight: 600;
-  }
-
-  /* A short accent bar marks the current page even when the pill tint is
-     subtle against the panel surface. */
-  .link.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 9px;
-    bottom: 9px;
-    width: 2px;
-    border-radius: 1px;
-    background: var(--accent);
   }
 </style>

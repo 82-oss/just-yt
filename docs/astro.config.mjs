@@ -2,15 +2,22 @@
 import { defineConfig, fontProviders } from 'astro/config';
 import { satteri } from '@astrojs/markdown-satteri';
 import { codeThemeDark, codeThemeLight } from './src/lib/code-theme.mjs';
-import { tableScrollPlugin } from './src/lib/markdown-plugins.mjs';
+import {
+  calloutHastPlugin,
+  docChromeHastPlugin,
+  docChromePlugin,
+  tableScrollPlugin,
+} from './src/lib/markdown-plugins.mjs';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://just-yt.dev',
 
-  // The overview page is gone; the docs carry the introduction now.
+  // `/` renders the first doc itself (src/pages/index.astro) rather than
+  // bouncing through a redirect, so nobody watches a blank page hop. This entry
+  // only keeps the URL that used to serve it alive.
   redirects: {
-    '/': '/docs/getting-started',
+    '/docs/getting-started': '/',
   },
 
   fonts: [
@@ -41,7 +48,12 @@ export default defineConfig({
       themes: { light: codeThemeLight, dark: codeThemeDark },
       wrap: false,
     },
-    processor: satteri({ hastPlugins: [tableScrollPlugin] }),
+    processor: satteri({
+      // `directive` powers `:::tabs` and the callouts; see src/lib/markdown-plugins.mjs.
+      features: { directive: true },
+      mdastPlugins: [docChromePlugin],
+      hastPlugins: [tableScrollPlugin, docChromeHastPlugin, calloutHastPlugin],
+    }),
   },
 
   vite: {

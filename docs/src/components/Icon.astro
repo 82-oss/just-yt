@@ -1,0 +1,56 @@
+---
+/**
+ * The icon set.
+ *
+ * One monoline family at a single weight, so a chevron in the pager and the
+ * drawer's menu button look like they came from the same hand. Every glyph is
+ * drawn on a 24x24 grid, strokes only, and inherits `currentColor` — nothing
+ * here carries its own colour or fill.
+ *
+ * Only glyphs the interface actually uses live here. Callout and copy glyphs
+ * are duplicated in src/lib/markdown-plugins.mjs, which runs in the Markdown
+ * processor and can't read an `.astro` file.
+ *
+ * Icons are inlined rather than sprited: there are five of them and they cost
+ * less as markup than as an extra request plus `<use>` plumbing.
+ */
+export type IconName = 'chevron-left' | 'chevron-right' | 'close' | 'github' | 'menu';
+
+interface Props {
+  name: IconName;
+  /** Pixel size for both axes. */
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 16, class: className } = Astro.props;
+
+/**
+ * Paths only — the shared `<svg>` below owns the viewBox, stroke width and cap
+ * style, so a glyph can never drift from the rest of the set.
+ */
+const PATHS: Record<IconName, string> = {
+  'chevron-left': '<path d="m14.5 5.5-6.2 6.5 6.2 6.5"/>',
+  'chevron-right': '<path d="m9.5 5.5 6.2 6.5-6.2 6.5"/>',
+  close: '<path d="M6 6 18 18"/><path d="M18 6 6 18"/>',
+  // The only filled glyph in the set — the mark is unreadable as an outline.
+  github:
+    '<path fill="currentColor" stroke="none" d="M12 2.2a9.8 9.8 0 0 0-3.1 19.1c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .8.1-.7.4-1.1.7-1.4-2.2-.2-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.8-4.6 5 .4.3.7 1 .7 2v2.9c0 .3.2.6.7.5A9.8 9.8 0 0 0 12 2.2Z"/>',
+  menu: '<path d="M3.8 7h16.4"/><path d="M3.8 12h16.4"/><path d="M3.8 17h16.4"/>',
+};
+---
+
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.7"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+  set:html={PATHS[name]}
+/>

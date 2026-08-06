@@ -1,0 +1,169 @@
+---
+// Behaviour for the code chrome that src/lib/markdown-plugins.mjs renders:
+// the copy button on every block, and the tabbed groups. Markup-only until
+// this runs — a tab group still shows its first panel with scripting off.
+---
+
+<script>
+  /* ------------------------------------------------------------- copy --- */
+
+  /** How long "Copied!" stays up before the tooltip retreats. */
+  const COPIED_MS = 1600;
+
+  /**
+   * Returns whether the text made it onto the clipboard.
+   *
+   * `navigator.clipboard` is tried first but is not enough on its own: it needs
+   * a secure context, which rules out plain-http previews on a LAN address, and
+   * it can still be refused by permissions policy. The textarea fallback covers
+   * both, and only when neither works does the button admit defeat.
+   */
+  async function writeClipboard(text: string): Promise<boolean> {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // Fall through to the legacy path.
+      }
+    }
+
+    const field = document.createElement('textarea');
+    field.value = text;
+    field.setAttribute('readonly', '');
+    field.style.cssText = 'position:fixed;top:-9999px;opacity:0';
+    document.body.append(field);
+    field.select();
+
+    try {
+      return document.execCommand('copy');
+    } catch {
+      return false;
+    } finally {
+      field.remove();
+    }
+  }
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-code-copy]')) {
+    const card = button.closest('[data-code-card]');
+    const code = card?.querySelector('pre');
+    const tip = button.querySelector<HTMLElement>('[data-code-copy-tip]');
+    if (!code || !tip) continue;
+
+    let timer: number | undefined;
+
+    button.addEventListener('click', async () => {
+      // Read the rendered text rather than anything captured at build time, so
+      // what lands on the clipboard is exactly what is on screen.
+      const copied = await writeClipboard(code.innerText.replace(/\n$/, ''));
+
+      tip.textContent = copied ? 'Copied!' : 'Press ⌘C';
+      button.dataset.state = copied ? 'copied' : 'failed';
+
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        // `quiet` rather than clearing the state outright: the pointer is
+        // usually still on the button, and springing back to "Copy" the instant
+        // "Copied!" ends reads as a glitch. The tooltip stays away until the
+        // pointer leaves.
+        button.dataset.state = 'quiet';
+        tip.textContent = 'Copy';
+      }, COPIED_MS);
+    });
+
+    const settle = () => {
+      if (button.dataset.state === 'quiet') delete button.dataset.state;
+    };
+
+    button.addEventListener('pointerleave', settle);
+    button.addEventListener('blur', settle);
+  }
+
+  /* ------------------------------------------------------------- tabs --- */
+
+  const TABS_STORAGE_KEY = 'just-yt-tabs';
+
+  /**
+   * Groups offering the same choices move together, and the choice survives a
+   * page change. Picking pnpm once at the top of an install page should not
+   * have to be repeated at every later snippet.
+   */
+  const preferences: Record<string, string> = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(TABS_STORAGE_KEY) ?? '{}');
+    } catch {
+      return {};
+    }
+  })();
+
+  const groups = [...document.querySelectorAll<HTMLElement>('[data-code-tabs]')].map((group) => ({
+    group,
+    key: group.dataset.tabLabels ?? '',
+    tabs: [...group.querySelectorAll<HTMLButtonElement>('.code-tab')],
+    panels: [...group.querySelectorAll<HTMLElement>('[data-tab-index]:not(.code-tab)')],
+  }));
+
+  function show(group: (typeof groups)[number], label: string) {
+    const active = group.tabs.find((tab) => tab.textContent === label)?.dataset.tabIndex;
+
+    for (const tab of group.tabs) {
+      const selected = tab.dataset.tabIndex === active;
+      tab.setAttribute('aria-selected', String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+    }
+
+    for (const panel of group.panels) {
+      const selected = panel.dataset.tabIndex === active;
+      panel.toggleAttribute('hidden', !selected);
+      panel.toggleAttribute('data-tab-active', selected);
+    }
+  }
+
+  function choose(key: string, label: string) {
+    preferences[key] = label;
+    try {
+      localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(preferences));
+    } catch {
+      // Private browsing. The choice still applies for this page.
+    }
+
+    for (const group of groups) {
+      if (group.key === key) show(group, label);
+    }
+  }
+
+  for (const group of groups) {
+    const labels = group.tabs.map((tab) => tab.textContent ?? '');
+
+    // A remembered choice only applies if this group actually offers it.
+    const remembered = preferences[group.key];
+    if (remembered && labels.includes(remembered)) show(group, remembered);
+
+    for (const tab of group.tabs) {
+      tab.addEventListener('click', () => choose(group.key, tab.textContent ?? ''));
+    }
+
+    // Roving focus across the tablist, per the ARIA tabs pattern.
+    group.group.querySelector('.code-tabs-list')?.addEventListener('keydown', (event) => {
+      const key = (event as KeyboardEvent).key;
+      const from = group.tabs.findIndex((tab) => tab === document.activeElement);
+      if (from === -1) return;
+
+      const to =
+        key === 'ArrowRight'
+          ? (from + 1) % group.tabs.length
+          : key === 'ArrowLeft'
+            ? (from - 1 + group.tabs.length) % group.tabs.length
+            : key === 'Home'
+              ? 0
+              : key === 'End'
+                ? group.tabs.length - 1
+                : -1;
+
+      if (to === -1) return;
+      event.preventDefault();
+      choose(group.key, labels[to]);
+      group.tabs[to].focus();
+    });
+  }
+</script>

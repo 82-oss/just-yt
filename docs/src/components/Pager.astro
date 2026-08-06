@@ -1,4 +1,5 @@
 ---
+import Icon from './Icon.astro';
 import { docHref, type Doc } from '../lib/docs';
 
 interface Props {
@@ -14,8 +15,11 @@ const { prev, next } = Astro.props;
     <nav class="pager" aria-label="Page navigation">
       {prev ? (
         <a class="card prev" href={docHref(prev)} rel="prev">
-          <span class="direction">← Previous</span>
-          <span class="label">{prev.data.title}</span>
+          <Icon name="chevron-left" size={18} class="chevron" />
+          <span class="text">
+            <span class="direction">Previous</span>
+            <span class="label">{prev.data.title}</span>
+          </span>
         </a>
       ) : (
         <span />
@@ -23,8 +27,11 @@ const { prev, next } = Astro.props;
 
       {next && (
         <a class="card next" href={docHref(next)} rel="next">
-          <span class="direction">Next →</span>
-          <span class="label">{next.data.title}</span>
+          <span class="text">
+            <span class="direction">Next</span>
+            <span class="label">{next.data.title}</span>
+          </span>
+          <Icon name="chevron-right" size={18} class="chevron" />
         </a>
       )}
     </nav>
@@ -44,35 +51,72 @@ const { prev, next } = Astro.props;
 
   .card {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 16px 20px;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     transition:
       border-color 0.15s ease,
       background-color 0.15s ease;
   }
 
   .card:hover {
-    border-color: var(--accent);
+    border-color: var(--line-strong);
     background: var(--surface);
   }
 
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
   .next {
-    align-items: flex-end;
+    justify-content: flex-end;
     text-align: right;
   }
 
   .direction {
-    color: var(--muted);
+    color: var(--faint);
     font-size: var(--text-xs);
   }
 
   .label {
+    overflow: hidden;
     color: var(--text);
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /*
+   * The chevron leans towards the edge it points at on hover — the only motion
+   * in the pager, and it says which way you are about to go.
+   *
+   * `:global()` because the class is passed to <Icon> as a prop; Astro's scope
+   * attribute only lands on elements written in this file's template.
+   */
+  .card :global(.chevron) {
+    flex: none;
+    color: var(--faint);
+    transition:
+      color 0.15s ease,
+      transform 0.15s var(--ease);
+  }
+
+  .card:hover :global(.chevron) {
+    color: var(--text);
+  }
+
+  .prev:hover :global(.chevron) {
+    transform: translateX(-2px);
+  }
+
+  .next:hover :global(.chevron) {
+    transform: translateX(2px);
   }
 
   @media (max-width: 560px) {

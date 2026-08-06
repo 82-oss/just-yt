@@ -8,7 +8,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <h1>That page doesn’t exist.</h1>
     <p class="lead">The link may be out of date, or the page may have moved.</p>
     <div class="actions">
-      <a class="button primary" href="/docs/getting-started">Getting started</a>
+      <a class="button primary" href="/">Getting started</a>
       <a class="button" href="/docs/api">API reference</a>
     </div>
   </main>
@@ -18,7 +18,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .page {
     max-width: 640px;
     margin: 0 auto;
-    padding: clamp(56px, 12vh, 128px) var(--gutter) 112px;
+    padding: clamp(56px, 12vh, 128px) var(--content-pad) 112px;
   }
 
   h1 {

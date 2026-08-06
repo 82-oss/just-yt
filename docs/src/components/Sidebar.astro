@@ -1,9 +1,12 @@
 ---
+import DrawerToggle from './DrawerToggle.astro';
+import Icon from './Icon.astro';
 import Logo from './Logo.astro';
 import SearchTrigger from './SearchTrigger.astro';
 import SidebarNav from './SidebarNav.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import type { DocGroup } from '../lib/docs';
+import { VERSION } from '../lib/version';
 
 interface Props {
   groups: DocGroup[];
@@ -13,15 +16,21 @@ interface Props {
 const { groups, pathname } = Astro.props;
 ---
 
-{/* Stays mounted at every width — collapsing slides it out, the content
-    animates across the space it leaves, and below 1000px the same panel is
-    the mobile drawer. */}
+{/* Permanent on desktop — there is nothing to collapse it with any more. Below
+    1000px the same panel slides in as a drawer, which is the one width where
+    276px of navigation genuinely is in the way. */}
 <aside class="sidebar" id="docs-sidebar">
   <div class="head">
-    <a class="brand" href="/docs/getting-started" aria-label="just-yt home">
+    <a class="brand" href="/" aria-label="just-yt home">
       <Logo />
     </a>
-    <ThemeToggle />
+
+    <div class="head-actions">
+      <ThemeToggle />
+      {/* An open drawer covers the topbar's copy of this button, so the panel
+          carries its own. Hidden above the breakpoint, where it has no job. */}
+      <DrawerToggle />
+    </div>
   </div>
 
   <div class="search-slot">
@@ -33,8 +42,11 @@ const { groups, pathname } = Astro.props;
   </div>
 
   <footer class="foot">
-    <a href="https://github.com/spheceo/just-yt" rel="noreferrer noopener" target="_blank">GitHub</a>
-    <span>v0.0.5 · MIT</span>
+    <span class="version">v{VERSION}</span>
+    <a class="repo" href="https://github.com/spheceo/just-yt" rel="noreferrer noopener" target="_blank">
+      <Icon name="github" size={14} />
+      GitHub
+    </a>
   </footer>
 </aside>
 
@@ -50,18 +62,12 @@ const { groups, pathname } = Astro.props;
     background: var(--surface);
   }
 
-  /* Desktop toggling is instant — the panel just appears or disappears, so
-     nothing on the page slides around. */
-  :global(:root[data-sidebar='collapsed']) .sidebar {
-    transform: translateX(-100%);
-  }
-
   .head {
     display: flex;
+    flex: none;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    flex: none;
     height: var(--topbar-h);
     padding: 0 var(--sidebar-pad);
   }
@@ -70,34 +76,66 @@ const { groups, pathname } = Astro.props;
     display: flex;
     align-items: center;
     min-width: 0;
+    border-radius: var(--radius-sm);
+  }
+
+  .head-actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 2px;
   }
 
   .search-slot {
     flex: none;
-    padding: 8px var(--sidebar-pad) 20px;
+    padding: 6px var(--sidebar-pad) 18px;
   }
 
   .scroller {
     flex: 1;
     min-height: 0;
-    padding: 0 calc(var(--sidebar-pad) - 10px) 24px;
+    /* Pulled in so the nav pills' padding lines up with the search field above
+       them, rather than the pills themselves. */
+    padding: 0 calc(var(--sidebar-pad) - 12px) 24px;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: thin;
   }
 
   .foot {
     display: flex;
+    flex: none;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    flex: none;
     padding: 12px var(--sidebar-pad);
     border-top: 1px solid var(--line);
-    color: var(--muted);
     font-size: var(--text-xs);
   }
 
-  .foot a:hover {
+  .version {
+    padding: 3px 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    color: var(--faint);
+    font-family: var(--font-mono);
+    letter-spacing: -0.01em;
+  }
+
+  .repo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .repo:hover {
+    background: var(--surface-hover);
     color: var(--text);
   }
 
@@ -107,6 +145,10 @@ const { groups, pathname } = Astro.props;
     .sidebar {
       box-shadow: var(--shadow);
       transition: transform var(--duration) var(--ease);
+    }
+
+    :global(:root:not([data-drawer='open'])) .sidebar {
+      transform: translateX(-100%);
     }
   }
 </style>

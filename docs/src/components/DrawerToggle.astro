@@ -1,0 +1,103 @@
+---
+import Icon from './Icon.astro';
+
+// Drives `<html data-drawer>`, which only means anything below 1000px — the
+// sidebar is permanent above it and this button is hidden. Nothing about the
+// drawer is persisted: it is a transient overlay, and reopening it on the next
+// page load would be a bug, not a convenience.
+---
+
+<button class="drawer-toggle" type="button" data-drawer-toggle aria-controls="docs-sidebar" aria-expanded="false">
+  <Icon name="menu" class="glyph open" />
+  <Icon name="close" class="glyph close" />
+</button>
+
+<style>
+  .drawer-toggle {
+    display: none;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .drawer-toggle:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  /*
+   * `:global()` because `glyph` is handed to <Icon> as a prop, and Astro only
+   * adds its scope attribute to elements written in this file's own template —
+   * the `<svg>` that ends up carrying the class is rendered by Icon.astro.
+   * Scoping is still real: every selector is anchored to `.drawer-toggle`.
+   */
+  .drawer-toggle :global(.glyph) {
+    grid-area: 1 / 1;
+  }
+
+  .drawer-toggle :global(.close),
+  :root[data-drawer='open'] .drawer-toggle :global(.open) {
+    display: none;
+  }
+
+  :root[data-drawer='open'] .drawer-toggle :global(.close) {
+    display: block;
+  }
+
+  @media (max-width: 1000px) {
+    .drawer-toggle {
+      display: grid;
+    }
+  }
+</style>
+
+<script>
+  const MOBILE = '(max-width: 1000px)';
+  const root = document.documentElement;
+
+  const sidebar = document.getElementById('docs-sidebar');
+  const scrim = document.querySelector<HTMLElement>('[data-drawer-scrim]');
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-drawer-toggle]');
+
+  const isOpen = () => root.dataset.drawer === 'open';
+
+  const sync = () => {
+    const open = isOpen();
+
+    for (const button of buttons) {
+      button.setAttribute('aria-expanded', String(open));
+      button.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+    }
+
+    // Only the off-screen drawer leaves the tab order. Above the breakpoint the
+    // panel is part of the page and must always be reachable.
+    if (sidebar) sidebar.inert = !open && matchMedia(MOBILE).matches;
+  };
+
+  const set = (open: boolean) => {
+    root.dataset.drawer = open ? 'open' : 'closed';
+    sync();
+  };
+
+  for (const button of buttons) button.addEventListener('click', () => set(!isOpen()));
+
+  scrim?.addEventListener('click', () => set(false));
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isOpen()) set(false);
+  });
+
+  // Never leave the drawer stranded open on the way past the breakpoint.
+  matchMedia(MOBILE).addEventListener('change', () => set(false));
+
+  sync();
+</script>

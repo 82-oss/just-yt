@@ -1,0 +1,11 @@
+---
+import DocPage from '../components/DocPage.astro';
+import { getSortedDocs } from '../lib/docs';
+
+// `/` is the opening page of the documentation, not a redirect to it. Serving a
+// meta-refresh here meant every visitor watched a bare "Redirecting…" frame
+// before the real page arrived.
+const [doc] = await getSortedDocs();
+---
+
+<DocPage doc={doc} />

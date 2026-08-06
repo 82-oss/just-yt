@@ -34,6 +34,9 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "docs:dev": "pnpm --filter just-yt-docs dev",
+    "docs:dev:background": "pnpm --dir docs exec astro dev --background --host 0.0.0.0",
+    "docs:status": "pnpm --dir docs exec astro dev status",
+    "docs:stop": "pnpm --dir docs exec astro dev stop",
     "docs:build": "pnpm --filter just-yt-docs build",
     "example:basic": "tsx examples/basic.ts",
     "release": "tsx scripts/release.ts",

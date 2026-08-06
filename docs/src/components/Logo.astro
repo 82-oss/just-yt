@@ -1,54 +1,40 @@
 ---
 /**
- * The just-yt mark: a geometric monoline "y" drawn with two strokes.
+ * The just-yt logo: the name, and nothing else.
  *
- * An abstract letterform rather than a play button or media glyph, so it
- * doesn't borrow anyone else's iconography. The long stroke runs through the
- * junction to form the tail, which keeps it two lines — legible at 16px.
- * Monochrome, so it inherits whatever the surrounding text colour is.
+ * There is no mark. A play triangle borrows YouTube's iconography, and an
+ * abstract letterform next to a four-word sidebar is decoration standing in for
+ * a brand. The package is called `just-yt`; setting that well is the logo.
+ *
+ * The weight split — `just-` quiet, `yt` at full contrast — is what keeps it
+ * from reading as a stray line of text. It's one string to a screen reader and
+ * one string on the clipboard; only the colour changes.
  */
-interface Props {
-  /** Hides the wordmark, e.g. for tight layouts. */
-  markOnly?: boolean;
-}
-
-const { markOnly = false } = Astro.props;
 ---
 
 <span class="logo">
-  <svg
-    class="mark"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.4"
-    stroke-linecap="round"
-    aria-hidden="true"
-    focusable="false"
-  >
-    <path d="M6.9 4.75 12 11.9"></path>
-    <path d="M17.5 4.75 7.6 19.25"></path>
-  </svg>
-  {!markOnly && <span class="wordmark">just-yt</span>}
+  <span class="quiet">just-</span>yt
 </span>
 
 <style>
   .logo {
     display: inline-flex;
-    align-items: center;
-    gap: 9px;
+    align-items: baseline;
     color: var(--text);
-  }
-
-  .mark {
-    width: 20px;
-    height: 20px;
-    flex: none;
-  }
-
-  .wordmark {
-    font-size: 0.9375rem;
+    font-size: 1rem;
     font-weight: 600;
-    letter-spacing: -0.015em;
+    /* Tight, because the hyphen already puts a gap in the middle of the word. */
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+  }
+
+  .quiet {
+    color: var(--muted);
+    transition: color 0.15s ease;
+  }
+
+  /* The whole name comes up to full contrast when it's a live link. */
+  :where(a):hover .quiet {
+    color: var(--text);
   }
 </style>

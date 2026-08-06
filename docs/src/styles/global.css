@@ -212,25 +212,80 @@ html {
   font-size: 0.875em;
 }
 
-/* Blockquotes render as callouts. A full accent border reads as an alert now
-   that the accent is plain white, so the emphasis sits on one edge instead. */
-.prose blockquote {
-  margin-inline: 0;
-  padding: 14px 18px;
-  border: 1px solid var(--line);
-  border-left: 2px solid var(--text);
-  border-radius: var(--radius);
-  background: var(--accent-quiet);
+/* -------------------------------------------------------------- callouts --- */
+
+/*
+ * Every callout — `:::note`, `:::warning`, and plain `>` blockquotes — is
+ * rendered as `<aside class="callout">` by src/lib/markdown-plugins.mjs.
+ *
+ * Two columns, not a left trim: a rule down one edge with a flat panel behind
+ * it puts the emphasis on the frame instead of on what the callout is *for*.
+ * The glyph carries the meaning, and the tone washes the whole panel so the
+ * kind is legible from across the page. Body text stays neutral — colouring
+ * prose to match a border is how documentation starts looking like an alert.
+ */
+.prose .callout {
+  --tone: var(--tone-note);
+
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 1.75em 0;
+  padding: 15px 18px;
+  border: 1px solid color-mix(in srgb, var(--tone) 26%, var(--line));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--tone) 7%, var(--bg));
 }
 
-.prose blockquote p {
+.prose .callout[data-callout='tip'] {
+  --tone: var(--tone-tip);
+}
+
+.prose .callout[data-callout='warning'] {
+  --tone: var(--tone-warning);
+}
+
+.prose .callout[data-callout='danger'] {
+  --tone: var(--tone-danger);
+}
+
+/* Pinned to the first row so it stays beside the opening line however long the
+   callout runs; everything else stacks in the second column. */
+.callout-icon {
+  display: flex;
+  grid-column: 1;
+  grid-row: 1;
+  align-items: center;
+  /* One line box of the body text, so the glyph is optically centred on it. */
+  height: calc(var(--text-sm) * 1.7);
+  color: var(--tone);
+}
+
+.prose .callout > :not(.callout-icon) {
+  grid-column: 2;
   margin: 0;
-  color: var(--muted);
+}
+
+.prose .callout-title {
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+.prose .callout p,
+.prose .callout li {
   font-size: var(--text-sm);
 }
 
-.prose blockquote p + p {
+/* The first block shares the glyph's row, so only later ones take a margin —
+   spacing the first would drag it below the icon it is meant to sit beside. */
+.prose .callout > :not(.callout-icon) ~ :not(.callout-icon) {
   margin-top: 0.6em;
+}
+
+.prose .callout-title + * {
+  margin-top: 0.35em;
 }
 
 /* -------------------------------------------------------------- tables --- */
@@ -272,16 +327,39 @@ html {
   overflow-x: auto;
 }
 
-/* --------------------------------------------------------------- shiki --- */
+/* ----------------------------------------------------------------- code --- */
+
+/*
+ * Every fenced block is wrapped in `<figure class="code-card">` by
+ * src/lib/markdown-plugins.mjs, which owns the frame; the `<pre>` inside is
+ * only ever the scrolling surface.
+ */
+.prose .code-card {
+  position: relative;
+  margin: 1.75em 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--code);
+  /* Clips the `<pre>`'s square corners against the rounded frame. */
+  overflow: hidden;
+}
+
+.prose .code-card-title {
+  padding: 10px 52px 10px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-raised);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
 
 .prose pre.astro-code {
   overflow-x: auto;
-  margin: 1.6em 0;
-  padding: 18px 20px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  margin: 0;
+  /* Right padding keeps the last column clear of the copy button. */
+  padding: 18px 52px 18px 20px;
   /* Inline styles from Shiki win without this, and we want our own surface. */
-  background-color: var(--code) !important;
+  background-color: transparent !important;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   line-height: 1.7;
@@ -290,6 +368,192 @@ html {
 
 .prose pre.astro-code code {
   font-family: inherit;
+}
+
+/* --- copy button --------------------------------------------------- */
+
+/*
+ * A sibling of the `<pre>` rather than a child, so horizontal scrolling can't
+ * carry it off the edge of the block.
+ */
+.code-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.code-card:hover .code-copy,
+.code-copy:focus-visible,
+.code-copy[data-state] {
+  opacity: 1;
+}
+
+/* Nothing hovers on a touch screen, so the button has to be there already. */
+@media (hover: none) {
+  .code-copy {
+    opacity: 1;
+  }
+}
+
+.code-copy:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+.code-copy[data-state='copied'] {
+  border-color: color-mix(in srgb, var(--tone-tip) 45%, var(--line));
+  color: var(--tone-tip);
+}
+
+/* Clipboard access refused outright. The button keeps its copy glyph and the
+   tooltip says what to press instead — a tick would be a lie. */
+.code-copy[data-state='failed'] {
+  border-color: color-mix(in srgb, var(--tone-danger) 45%, var(--line));
+  color: var(--tone-danger);
+}
+
+.code-copy .icon {
+  grid-area: 1 / 1;
+}
+
+.code-copy .copy-done,
+.code-copy[data-state='copied'] .copy-idle {
+  display: none;
+}
+
+.code-copy[data-state='copied'] .copy-done {
+  display: block;
+}
+
+/* --- copy tooltip --------------------------------------------------- */
+
+/* Left of the button: it sits against the right edge of the block, so there is
+   nowhere else for a tooltip to go without leaving the card. */
+.code-copy-tip {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 8px);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--bg);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity 0.15s ease;
+}
+
+.code-copy:hover .code-copy-tip,
+.code-copy:focus-visible .code-copy-tip,
+.code-copy[data-state='copied'] .code-copy-tip,
+.code-copy[data-state='failed'] .code-copy-tip {
+  opacity: 1;
+}
+
+/*
+ * `quiet` is the beat after "Copied!" times out. The pointer is usually still
+ * on the button, and letting the tooltip snap back to "Copy" reads as a
+ * glitch — so it stays hidden until the pointer leaves.
+ */
+.code-copy[data-state='quiet'] .code-copy-tip {
+  opacity: 0;
+}
+
+/* --- tabbed groups -------------------------------------------------- */
+
+/*
+ * `:::tabs` around a run of fences. One frame around the whole group, so three
+ * ways of installing the same package read as one decision rather than three
+ * stacked blocks.
+ */
+.prose .code-tabs {
+  margin: 1.75em 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--code);
+  overflow: hidden;
+}
+
+.code-tabs-list {
+  display: flex;
+  gap: 2px;
+  padding: 6px 6px 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-raised);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.code-tabs-list::-webkit-scrollbar {
+  display: none;
+}
+
+.code-tab {
+  position: relative;
+  flex: none;
+  padding: 7px 12px 9px;
+  border: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.code-tab:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.code-tab[aria-selected='true'] {
+  color: var(--text);
+}
+
+/* Sits on the list's own bottom border, so the selected tab reads as joined to
+   the panel below it. */
+.code-tab[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  bottom: -1px;
+  left: 10px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--accent);
+}
+
+/* Inside a group the card is just the panel; the group owns the frame. */
+.prose .code-tabs .code-card {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.prose .code-tabs .code-card[hidden] {
+  display: none;
 }
 
 /*
