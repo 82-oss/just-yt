@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.11 — 2026-08-07
+
+- Wait for npm registry propagation when verifying a newly published release.
+
 ## 0.0.10 — 2026-08-07
 
 - Make automated releases retryable and verify npm publication before creating the GitHub Release.
