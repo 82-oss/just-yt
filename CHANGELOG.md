@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.14 — 2026-08-07
+
+- Route proxy-enabled requests through Bun's native fetch proxy support while retaining the session-scoped Undici transport on Node.js, and reject unsupported runtimes instead of silently bypassing the proxy.
+
 ## 0.0.13 — 2026-08-07
 
 - Add first-class, session-scoped HTTP and HTTPS proxy support through the `proxy` constructor option, and report refused transcript requests as unavailable with YouTube's playability reason.
