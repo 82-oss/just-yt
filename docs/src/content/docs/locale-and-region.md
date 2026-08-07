@@ -14,9 +14,9 @@ text. They do not translate the SDK's property names.
 
 ```ts
 const yt = new YouTube({
-  lang: 'es',
-  location: 'ES',
-  timezone: 'Europe/Madrid',
+  lang: 'en',
+  location: 'US',
+  timezone: 'America/New_York',
 });
 ```
 
@@ -27,7 +27,7 @@ const yt = new YouTube({
 | `timezone` | IANA timezone used in the request context. | Host timezone |
 | `enableSafetyMode` | Requests YouTube's restricted mode. | `false` |
 
-Use an IANA timezone such as `Africa/Johannesburg` or `America/New_York`, not a
+Use an IANA timezone such as `Europe/London` or `America/New_York`, not a
 short abbreviation such as `EST`. Abbreviations can be ambiguous and do not
 describe daylight-saving rules.
 
@@ -46,8 +46,8 @@ Locale belongs to the session, so do not mutate it between calls. Create one
 long-lived client per audience when an application truly needs several:
 
 ```ts
-const southAfrica = new YouTube({ lang: 'en', location: 'ZA' });
-const japan = new YouTube({ lang: 'ja', location: 'JP' });
+const us = new YouTube({ lang: 'en', location: 'US' });
+const uk = new YouTube({ lang: 'en', location: 'GB' });
 ```
 
 This keeps each session internally consistent.

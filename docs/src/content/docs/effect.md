@@ -22,7 +22,7 @@ const program = Effect.gen(function* () {
 });
 
 const video = await Effect.runPromise(
-  program.pipe(Effect.provide(layer({ location: 'ZA' }))),
+  program.pipe(Effect.provide(layer({ location: 'US' }))),
 );
 ```
 

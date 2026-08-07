@@ -66,8 +66,7 @@ Options go on the constructor:
 
 ```ts
 const yt = new YouTube({
-  lang: "es",
-  location: "ES",
+  location: "US",
   proxy: process.env.YOUTUBE_PROXY_URL,
   timeoutMillis: 30_000,
   retries: 3,

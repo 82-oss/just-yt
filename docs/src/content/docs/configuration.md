@@ -13,7 +13,7 @@ point is:
 const yt = new YouTube();
 ```
 
-Configuration should answer a real need. A Spanish search result needs locale
+Configuration should answer a real need. UK search results need locale
 options. A slow upstream may need a longer timeout. A test may need a custom
 `fetch`. Adding every option at once makes problems harder to understand.
 
@@ -28,14 +28,14 @@ options. A slow upstream may need a longer timeout. A test may need a custom
 
 ## A small, purposeful configuration
 
-This client asks for South African results and gives each request 30 seconds:
+This client targets US results and gives each request 30 seconds:
 
 ```ts
 import { YouTube } from 'just-yt';
 
 const yt = new YouTube({
-  location: 'ZA',
-  timezone: 'Africa/Johannesburg',
+  location: 'US',
+  timezone: 'America/New_York',
   timeoutMillis: 30_000,
 });
 ```

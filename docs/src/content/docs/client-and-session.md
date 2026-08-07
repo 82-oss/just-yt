@@ -14,7 +14,7 @@ and anonymous session shared by those methods.
 This line only stores configuration and prepares the client:
 
 ```ts
-const yt = new YouTube({ location: 'ZA' });
+const yt = new YouTube({ location: 'US' });
 ```
 
 No request happens until you call `search()`, `video()`, `transcript()`, or
@@ -44,7 +44,7 @@ try {
 For a server, create it outside the request handler:
 
 ```ts
-const yt = new YouTube({ location: 'ZA' });
+const yt = new YouTube({ location: 'US' });
 
 export async function GET(request: Request): Promise<Response> {
   const id = new URL(request.url).searchParams.get('id');
@@ -60,8 +60,8 @@ incoming request.
 ## When separate clients make sense
 
 Use separate clients when the sessions genuinely need different identities or
-configuration—for example, one fixed to `location: 'ZA'` and another fixed to
-`location: 'JP'`, or two distinct proxies.
+configuration—for example, one fixed to `location: 'US'` and another fixed to
+`location: 'GB'`, or two distinct proxies.
 
 Do not create extra clients merely to run work at the same time. The plural
 methods already provide bounded [concurrency](/docs/concurrency) within one
