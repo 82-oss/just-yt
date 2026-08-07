@@ -10,85 +10,124 @@ const { groups, pathname } = Astro.props;
 const current = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
 ---
 
-{/* Labels only. Five pages don't need glyphs to tell them apart, and a column
-    of icons reads as decoration next to titles that already say the thing. */}
+{/* The chapters start open so the full learning path is visible. Native
+    details/summary keeps every chapter independently collapsible without
+    making navigation depend on JavaScript. */}
 <nav class="doc-nav" aria-label="Documentation">
   {
     groups.map((group) => (
-      <div class="group">
-        <p class="group-heading">{group.name}</p>
+      <details class="group" open>
+        <summary class="group-heading">
+          <span>{group.name}</span>
+          <span class="chevron" aria-hidden="true" />
+        </summary>
         <ul>
           {group.docs.map((doc) => {
             const href = docHref(doc);
             const active = current === href;
             return (
-              <li>
+              <li class:list={{ active }}>
                 <a href={href} class:list={['link', { active }]} aria-current={active ? 'page' : undefined}>
-                  {doc.data.title}
+                  {doc.data.label ?? doc.data.title}
                 </a>
               </li>
             );
           })}
         </ul>
-      </div>
+      </details>
     ))
   }
 </nav>
 
 <style>
   .group + .group {
-    margin-top: 26px;
+    margin-top: 15px;
   }
 
   .group-heading {
-    margin: 0 0 6px;
-    padding-inline: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 2px;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
     color: var(--faint);
     font-size: 0.6875rem;
     font-weight: 600;
     letter-spacing: 0.09em;
+    cursor: pointer;
+    list-style: none;
     text-transform: uppercase;
+    transition: color 0.15s ease;
+  }
+
+  .group-heading::-webkit-details-marker {
+    display: none;
+  }
+
+  .group-heading:hover {
+    color: var(--muted);
+  }
+
+  .chevron {
+    width: 6px;
+    height: 6px;
+    border-right: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 0.18s var(--ease);
+  }
+
+  details:not([open]) .chevron {
+    transform: rotate(-45deg) translate(-1px, -1px);
+  }
+
+  details:not([open]) .group-heading {
+    margin-bottom: 0;
   }
 
   ul {
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    margin: 0;
+    gap: 0;
+    margin: 0 0 0 12px;
     padding: 0;
+    border-left: 1px solid var(--line);
     list-style: none;
   }
 
+  li {
+    position: relative;
+    min-width: 0;
+  }
+
   .link {
+    position: relative;
     display: block;
     overflow: hidden;
-    padding: 7px 12px;
-    border-radius: var(--radius);
+    padding: 5px 12px 5px 16px;
     color: var(--muted);
     font-size: var(--text-sm);
     text-overflow: ellipsis;
     white-space: nowrap;
-    transition:
-      background-color 0.15s ease,
-      color 0.15s ease;
+    transition: color 0.15s ease;
   }
 
   .link:hover {
-    background: var(--surface-hover);
-    color: var(--text);
+    color: color-mix(in srgb, var(--text) 72%, var(--muted));
   }
 
-  /*
-   * The current page is a filled pill with a hairline ring. The ring is what
-   * separates it from a hovered item — on a panel this dark the fill alone is
-   * too close a match to read as "you are here" once the pointer moves away.
-   */
   .link.active {
-    background: var(--surface-hover);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
     color: var(--text);
-    /* 600, not 550 — only 400/500/600/700 are loaded, so anything else is a
-       synthesised weight that renders slightly heavier than it should. */
     font-weight: 600;
+  }
+
+  li.active::before {
+    position: absolute;
+    inset: 0 auto 0 -1px;
+    z-index: 1;
+    width: 1px;
+    background: var(--accent);
+    content: '';
   }
 </style>

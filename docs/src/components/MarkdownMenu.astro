@@ -1,0 +1,238 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  markdownHref: string;
+}
+
+const { markdownHref } = Astro.props;
+---
+
+<details class="markdown-menu" data-markdown-menu>
+  <summary>
+    <Icon name="copy" size={15} />
+    <span data-menu-label>Copy page</span>
+    <span class="summary-chevron" aria-hidden="true"></span>
+  </summary>
+
+  <div class="menu" role="menu">
+    <button type="button" role="menuitem" data-copy-markdown data-markdown-href={markdownHref}>
+      <span class="item-icon"><Icon name="copy" size={16} /></span>
+      <span class="item-copy">
+        <strong data-copy-title>Copy page</strong>
+        <small>Copy page as Markdown for LLMs</small>
+      </span>
+    </button>
+
+    <a href={markdownHref} target="_blank" rel="noreferrer noopener" role="menuitem">
+      <span class="item-icon" aria-hidden="true"><Icon name="file-text" size={16} /></span>
+      <span class="item-copy">
+        <strong>View as Markdown <Icon name="external-link" size={12} class="external-icon" /></strong>
+        <small>View this page as plain text</small>
+      </span>
+    </a>
+  </div>
+</details>
+
+<style>
+  .markdown-menu {
+    position: relative;
+    z-index: 10;
+    flex: none;
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary:hover,
+  details[open] summary {
+    border-color: var(--line-strong);
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  .summary-chevron {
+    width: 6px;
+    height: 6px;
+    margin-left: 2px;
+    border-right: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 0.16s var(--ease);
+  }
+
+  details[open] .summary-chevron {
+    transform: rotate(225deg) translate(-1px, -1px);
+  }
+
+  .menu {
+    position: absolute;
+    top: calc(100% + 7px);
+    right: 0;
+    display: grid;
+    width: min(280px, calc(100vw - 32px));
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(12px);
+  }
+
+  .menu button,
+  .menu a {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 9px;
+    align-items: center;
+    width: 100%;
+    padding: 8px;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .menu button:hover,
+  .menu a:hover,
+  .menu button:focus-visible,
+  .menu a:focus-visible {
+    background: var(--surface-hover);
+  }
+
+  .item-icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+  }
+
+  .item-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  strong {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  strong :global(.external-icon) {
+    flex: none;
+    color: var(--muted);
+  }
+
+  small {
+    color: var(--faint);
+    font-size: var(--text-xs);
+    line-height: 1.45;
+  }
+
+  @media (max-width: 560px) {
+    summary > :global(svg),
+    summary [data-menu-label] {
+      display: none;
+    }
+
+    summary {
+      width: 36px;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .summary-chevron {
+      margin-left: 0;
+    }
+  }
+</style>
+
+<script>
+  async function copyMarkdown(text: string): Promise<boolean> {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // Continue to the textarea fallback.
+      }
+    }
+
+    const field = document.createElement('textarea');
+    field.value = text;
+    field.setAttribute('readonly', '');
+    field.style.cssText = 'position:fixed;top:-9999px;opacity:0';
+    document.body.append(field);
+    field.select();
+
+    try {
+      return document.execCommand('copy');
+    } finally {
+      field.remove();
+    }
+  }
+
+  for (const menu of document.querySelectorAll<HTMLDetailsElement>('[data-markdown-menu]')) {
+    const button = menu.querySelector<HTMLButtonElement>('[data-copy-markdown]');
+    const title = menu.querySelector<HTMLElement>('[data-copy-title]');
+    if (!button || !title) continue;
+
+    button.addEventListener('click', async () => {
+      try {
+        const response = await fetch(button.dataset.markdownHref ?? '');
+        if (!response.ok) throw new Error('Markdown request failed');
+        const copied = await copyMarkdown(await response.text());
+        title.textContent = copied ? 'Copied' : 'Copy failed';
+      } catch {
+        title.textContent = 'Copy failed';
+      }
+
+      window.setTimeout(() => {
+        title.textContent = 'Copy page';
+        menu.open = false;
+      }, 700);
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!menu.contains(event.target as Node)) menu.open = false;
+    });
+
+    menu.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        menu.open = false;
+        menu.querySelector<HTMLElement>('summary')?.focus();
+      }
+    });
+  }
+</script>

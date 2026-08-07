@@ -1,0 +1,118 @@
+---
+import CodeChrome from '../components/CodeChrome.astro';
+import Icon from '../components/Icon.astro';
+import LandingHeader from '../components/LandingHeader.astro';
+import Logo from '../components/Logo.astro';
+import SiteHead from '../components/SiteHead.astro';
+import { GITHUB_LICENSE, GITHUB_REPO } from '../lib/site';
+import { VERSION } from '../lib/version';
+import '../styles/global.css';
+
+/**
+ * The shell for `/` — header, footer, and nothing else. The docs shell
+ * (BaseLayout) reserves a column for the sidebar and puts a breadcrumb in the
+ * bar; neither has anything to say on a single-page front door.
+ */
+interface Props {
+  pageTitle: string;
+  description: string;
+  links: { label: string; href: string }[];
+  docsHref: string;
+}
+
+const { pageTitle, description, links, docsHref } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <SiteHead pageTitle={pageTitle} description={description} />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <LandingHeader links={links} docsHref={docsHref} />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="footer">
+      <a class="footer-brand" href="/" aria-label="just-yt home">
+        <Logo />
+      </a>
+
+      <nav class="footer-links" aria-label="Footer">
+        {links.map((link) => <a href={link.href}>{link.label}</a>)}
+        <a href={GITHUB_REPO} rel="noreferrer noopener" target="_blank">
+          <Icon name="github" size={14} />
+          GitHub
+        </a>
+      </nav>
+
+      <span class="footer-meta">
+        v{VERSION} ·
+        <a href={GITHUB_LICENSE} rel="noreferrer noopener" target="_blank">
+          MIT license
+        </a>
+      </span>
+    </footer>
+
+    {/* Binds the copy buttons the CodePanel snippets render. */}
+    <CodeChrome />
+
+    <style>
+      .footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px 32px;
+        padding: 28px var(--content-pad);
+        border-top: 1px solid var(--line);
+        font-size: var(--text-sm);
+      }
+
+      .footer-brand {
+        display: flex;
+        align-items: center;
+        border-radius: var(--radius-sm);
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 20px;
+        color: var(--muted);
+      }
+
+      .footer-links a {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.15s ease;
+      }
+
+      .footer-links a:hover {
+        color: var(--text);
+      }
+
+      .footer-meta {
+        margin-left: auto;
+        color: var(--faint);
+        font-size: var(--text-xs);
+      }
+
+      .footer-meta a:hover {
+        color: var(--text);
+      }
+
+      @media (max-width: 720px) {
+        .footer-meta {
+          margin-left: 0;
+        }
+      }
+    </style>
+  </body>
+</html>

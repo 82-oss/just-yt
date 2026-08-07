@@ -58,6 +58,12 @@ const GLYPH = {
     '<path d="M8.6 3.3h6.8l4.8 4.8v6.8l-4.8 4.8H8.6l-4.8-4.8V8.1l4.8-4.8Z"/><path d="M12 8v4.6"/><path d="M12 16.2h.01"/>',
   copy: '<rect x="9" y="9" width="11" height="11" rx="2.6"/><path d="M15 5.6A2.6 2.6 0 0 0 12.4 4H6.6A2.6 2.6 0 0 0 4 6.6v5.8A2.6 2.6 0 0 0 5.6 15"/>',
   check: '<path d="m4.5 12.6 4.8 4.7L19.5 6.8"/>',
+  search: '<circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4 4"/>',
+  video: '<rect x="3" y="5" width="18" height="14" rx="3.2"/><path d="m10 8.8 5.4 3.2-5.4 3.2Z"/>',
+  transcript:
+    '<path d="M6 3.5h8l4 4v13H6Z"/><path d="M14 3.5v4h4"/><path d="M9 11.5h6"/><path d="M9 15h6"/><path d="M9 18.5h3.5"/>',
+  channel:
+    '<circle cx="9" cy="8.5" r="3"/><path d="M3.8 19a5.2 4.8 0 0 1 10.4 0"/><path d="M15.5 7a2.6 2.6 0 0 1 0 5"/><path d="M16.2 15.2a4.5 4.5 0 0 1 4 3.8"/>',
 };
 
 /* ------------------------------------------------------------ callouts --- */
@@ -74,6 +80,30 @@ const CALLOUTS = {
   caution: { tone: 'warning', glyph: 'alert', title: 'Caution' },
   danger: { tone: 'danger', glyph: 'octagon', title: 'Danger' },
 };
+
+function setLinkCard(node, ctx) {
+  const { description, href, icon: glyph = 'info', title } = node.attributes ?? {};
+
+  if (!href || !title || !description) {
+    ctx.report({
+      message: 'A `::link-card` needs `href`, `title`, and `description` attributes.',
+      node,
+      severity: 'warning',
+    });
+  }
+
+  ctx.setProperty(node, 'data', {
+    hName: 'a',
+    hProperties: {
+      class: 'doc-card',
+      href: href ?? '#',
+      'data-doc-card': '',
+      'data-doc-card-description': description ?? '',
+      'data-doc-card-icon': glyph,
+      'data-doc-card-title': title ?? 'Documentation',
+    },
+  });
+}
 
 /* ---------------------------------------------------------------- mdast --- */
 
@@ -92,6 +122,27 @@ export const docChromePlugin = {
   name: 'doc-chrome',
 
   containerDirective(node, ctx) {
+    if (node.name === 'link-grid') {
+      ctx.setProperty(node, 'data', {
+        hName: 'div',
+        hProperties: { class: 'doc-card-grid' },
+      });
+      return;
+    }
+
+    if (node.name === 'link-card') {
+      setLinkCard(node, ctx);
+      return;
+    }
+
+    if (['landing-hero', 'landing-feature', 'landing-closing'].includes(node.name)) {
+      ctx.setProperty(node, 'data', {
+        hName: 'section',
+        hProperties: { class: node.name },
+      });
+      return;
+    }
+
     if (node.name === 'tabs') {
       const labels = node.children.map((child, index) =>
         child.type === 'code' ? (parseMeta(child.meta).title ?? child.lang ?? `Tab ${index + 1}`) : '',
@@ -139,6 +190,10 @@ export const docChromePlugin = {
     });
   },
 
+  leafDirective(node, ctx) {
+    if (node.name === 'link-card') setLinkCard(node, ctx);
+  },
+
   blockquote(node, ctx) {
     ctx.setProperty(node, 'data', {
       hName: 'aside',
@@ -160,6 +215,7 @@ export const docChromePlugin = {
         hProperties: {
           class: 'code-card',
           'data-code-card': '',
+          ...(node.lang ? { 'data-code-language': node.lang } : {}),
           // Inside a group the fence's title becomes the tab label instead, so
           // rendering it again as a caption would just repeat it.
           ...(title && !inTabs ? { 'data-code-title': title } : {}),
@@ -190,6 +246,29 @@ export const tableScrollPlugin = {
         properties: { className: ['table-scroll'] },
         children: [],
       });
+    },
+  },
+};
+
+/** Adds the icon and visible title to Markdown-authored documentation cards. */
+export const docCardsHastPlugin = {
+  name: 'doc-cards',
+  element: {
+    filter: ['a'],
+    visit(node, ctx) {
+      if (!('data-doc-card' in (node.properties ?? {}))) return;
+
+      const glyph = String(node.properties['data-doc-card-icon'] ?? 'info');
+      const title = String(node.properties['data-doc-card-title'] ?? 'Documentation');
+      const description = String(node.properties['data-doc-card-description'] ?? '');
+      ctx.prependChild(
+        node,
+        raw(
+          `<span class="doc-card-icon">${icon(GLYPH[glyph] ?? GLYPH.info, 'doc-card-glyph')}</span>` +
+            `<strong class="doc-card-title">${escapeHtml(title)}</strong>` +
+            `<span class="doc-card-description">${escapeHtml(description)}</span>`,
+        ),
+      );
     },
   },
 };

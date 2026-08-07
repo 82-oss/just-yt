@@ -28,6 +28,28 @@
 
   <div class="results" id="search-results" data-search-results role="listbox" aria-label="Search results"></div>
 
+  <nav class="quick-links" data-search-quick-links aria-label="Quick links">
+    <p class="quick-links-label">Quick links</p>
+    <div class="quick-links-grid">
+      <a href="/docs/getting-started">
+        <span>Getting started</span>
+        <small>Meet just-yt</small>
+      </a>
+      <a href="/docs/installation">
+        <span>Installation</span>
+        <small>Add it to your project</small>
+      </a>
+      <a href="/docs/search">
+        <span>Search</span>
+        <small>Find videos and channels</small>
+      </a>
+      <a href="/docs/api">
+        <span>API reference</span>
+        <small>Explore the full API</small>
+      </a>
+    </div>
+  </nav>
+
   <p class="footer">
     <span><kbd>↑</kbd><kbd>↓</kbd> to navigate</span>
     <span><kbd>↵</kbd> to open</span>
@@ -38,9 +60,9 @@
   /* --- dialog -------------------------------------------------------- */
 
   .dialog {
-    width: min(560px, calc(100vw - 32px));
-    max-height: min(460px, calc(100vh - 120px));
-    margin: 12vh auto auto;
+    width: min(720px, calc(100vw - 32px));
+    max-height: min(620px, calc(100vh - 80px));
+    margin: 10vh auto auto;
     padding: 0;
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-lg);
@@ -53,18 +75,25 @@
   .dialog::backdrop {
     background: var(--backdrop);
     backdrop-filter: blur(2px);
+    animation: backdrop-in 0.24s ease-out both;
   }
 
   .dialog[open] {
     display: flex;
     flex-direction: column;
-    animation: rise 0.14s ease-out;
+    animation: dialog-in 0.24s var(--ease) both;
   }
 
-  @keyframes rise {
+  @keyframes dialog-in {
     from {
       opacity: 0;
-      transform: translateY(-6px);
+      transform: translateY(-14px) scale(0.97);
+    }
+  }
+
+  @keyframes backdrop-in {
+    from {
+      opacity: 0;
     }
   }
 
@@ -115,6 +144,64 @@
 
   .results:empty {
     display: none;
+  }
+
+  .quick-links {
+    padding: 18px 18px 20px;
+  }
+
+  .quick-links[hidden] {
+    display: none;
+  }
+
+  .quick-links-label {
+    margin: 0 0 10px;
+    color: var(--faint);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .quick-links-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .quick-links a {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg);
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .quick-links a:hover {
+    border-color: var(--line-strong);
+    background: var(--surface-hover);
+    transform: translateY(-1px);
+  }
+
+  .quick-links a span {
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .quick-links a small {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: var(--text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .footer {
@@ -198,6 +285,23 @@
       display: none;
     }
   }
+
+  @media (max-width: 520px) {
+    .dialog {
+      margin-top: 16px;
+    }
+
+    .quick-links-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dialog[open],
+    .dialog::backdrop {
+      animation: none;
+    }
+  }
 </style>
 
 <script>
@@ -221,8 +325,9 @@
   const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]');
   const input = document.querySelector<HTMLInputElement>('[data-search-input]');
   const list = document.querySelector<HTMLElement>('[data-search-results]');
+  const quickLinks = document.querySelector<HTMLElement>('[data-search-quick-links]');
 
-  if (dialog && input && list) {
+  if (dialog && input && list && quickLinks) {
     const MAX_RESULTS = 10;
 
     let index: SearchDoc[] | null = null;
@@ -373,6 +478,7 @@
     const render = (query: string) => {
       list.textContent = '';
       const queryTerms = terms(query);
+      quickLinks.hidden = queryTerms.length > 0;
 
       if (queryTerms.length === 0) {
         input.setAttribute('aria-expanded', 'false');

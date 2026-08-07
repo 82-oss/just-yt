@@ -1,9 +1,10 @@
 // @ts-check
 import { defineConfig, fontProviders } from 'astro/config';
 import { satteri } from '@astrojs/markdown-satteri';
-import { codeThemeDark, codeThemeLight } from './src/lib/code-theme.mjs';
+import { codeTheme } from './src/lib/code-theme.mjs';
 import {
   calloutHastPlugin,
+  docCardsHastPlugin,
   docChromeHastPlugin,
   docChromePlugin,
   tableScrollPlugin,
@@ -13,11 +14,10 @@ import {
 export default defineConfig({
   site: 'https://just-yt.dev',
 
-  // `/` renders the first doc itself (src/pages/index.astro) rather than
-  // bouncing through a redirect, so nobody watches a blank page hop. This entry
-  // only keeps the URL that used to serve it alive.
+  // `/` is the landing page; every doc lives under `/docs/`. Bare `/docs` has
+  // no page of its own, so it lands on the opening one.
   redirects: {
-    '/docs/getting-started': '/',
+    '/docs': '/docs/getting-started',
   },
 
   fonts: [
@@ -42,17 +42,15 @@ export default defineConfig({
   ],
 
   markdown: {
-    // Astro emits the light theme inline and the dark one as `--shiki-dark-*`
-    // custom properties; global.css swaps between them on `[data-theme]`.
     shikiConfig: {
-      themes: { light: codeThemeLight, dark: codeThemeDark },
+      theme: codeTheme,
       wrap: false,
     },
     processor: satteri({
       // `directive` powers `:::tabs` and the callouts; see src/lib/markdown-plugins.mjs.
       features: { directive: true },
       mdastPlugins: [docChromePlugin],
-      hastPlugins: [tableScrollPlugin, docChromeHastPlugin, calloutHastPlugin],
+      hastPlugins: [tableScrollPlugin, docChromeHastPlugin, calloutHastPlugin, docCardsHastPlugin],
     }),
   },
 

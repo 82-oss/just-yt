@@ -1,0 +1,79 @@
+---
+import type { CodeLanguage } from 'astro';
+import { Code } from 'astro:components';
+import Icon from './Icon.astro';
+import { codeTheme } from '../lib/code-theme.mjs';
+
+/**
+ * A code block for the landing page.
+ *
+ * The docs get their frame from the Markdown pipeline
+ * (src/lib/markdown-plugins.mjs), which never runs here — so this reproduces
+ * the same card, from the same syntax theme, for hand-written snippets.
+ *
+ * The copy button is deliberately identical markup to the one that plugin
+ * emits: `.code-card` and the `data-code-*` hooks are what
+ * src/components/CodeChrome.astro binds to, so a snippet here copies the same
+ * way a fenced block in the docs does, with no second script.
+ */
+interface Props {
+  code: string;
+  lang?: CodeLanguage;
+  /** Optional caption bar, for a filename or a shell name. */
+  title?: string;
+}
+
+const { code, lang = 'ts', title } = Astro.props;
+---
+
+<figure class="panel code-card" data-code-card>
+  {title && <figcaption class="panel-title">{title}</figcaption>}
+
+  <Code code={code.trim()} lang={lang} theme={codeTheme} />
+
+  <button class="code-copy" type="button" data-code-copy aria-label="Copy code to clipboard">
+    <Icon name="copy" class="icon copy-idle" />
+    <Icon name="check" class="icon copy-done" />
+    <span class="code-copy-tip" data-code-copy-tip aria-hidden="true">Copy</span>
+  </button>
+</figure>
+
+<style>
+  .panel {
+    position: relative;
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--code);
+    /* Clips the `<pre>`'s square corners against the rounded frame. */
+    overflow: hidden;
+  }
+
+  .panel-title {
+    padding: 10px 52px 10px 18px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-raised);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+
+  /* `<Code>` writes the `<pre>`, so it never carries this file's scope hash.
+     Anchored to the wrapper so the rule can't reach the docs' blocks. */
+  .panel :global(pre.astro-code) {
+    overflow-x: auto;
+    margin: 0;
+    /* Right padding keeps the last column clear of the copy button. */
+    padding: 20px 52px 20px 20px;
+    /* Inline styles from Shiki win without this, and we want our own surface. */
+    background-color: transparent !important;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    tab-size: 2;
+  }
+
+  .panel :global(pre.astro-code code) {
+    font-family: inherit;
+  }
+</style>

@@ -1,8 +1,9 @@
 ---
 title: API reference
+label: API
 description: Reference for the Promise client, Effect provider, options, domain models, lower-level services, and tagged errors.
-group: Explore
-order: 2
+group: Reference
+order: 1
 ---
 
 All examples import from the package root:

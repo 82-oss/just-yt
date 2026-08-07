@@ -1,122 +1,79 @@
 ---
-title: Getting started
-description: Install just-yt and make your first typed requests for public YouTube data—without a YouTube Data API key.
-group: Documentation
+title: Welcome to just-yt
+label: Welcome
+description: Learn what just-yt does, what it does not do, and how the documentation will take you from a first request to a reliable application.
+group: Start Here
 order: 1
 ---
 
-`just-yt` is a TypeScript SDK for reading public YouTube data. It can search
-YouTube, inspect videos and channels, read captions as transcripts, and fetch
-autocomplete suggestions.
+`just-yt` is a TypeScript library for reading public information from YouTube.
+It can search, inspect videos and channels, read published captions as
+transcripts, and return autocomplete suggestions.
 
-Unlike the official YouTube Data API, `just-yt` does not require you to create a
-Google Cloud project or supply an API key. It talks to the same internal
-Innertube service used by YouTube's own clients and turns the changing response
-format into stable, typed objects.
+You do not need a Google Cloud project or a YouTube Data API key. The library
+talks to Innertube, the internal service used by YouTube's own clients, and
+turns its changing responses into ordinary, typed JavaScript objects.
 
-:::caution{title="Public data only"}
-The SDK does not sign in, read private or members-only content, download media,
-or bypass YouTube's access controls.
+## Explore the SDK
+
+Choose the kind of public YouTube data you want to work with. Each card opens a
+focused guide with examples, options, and the reasons you might use them.
+
+:::link-grid
+::link-card{title="Search" href="/docs/search" icon="search" description="Find videos, channels, and playlists with familiar filters."}
+::link-card{title="Videos" href="/docs/videos" icon="video" description="Read stable metadata from a video ID or URL."}
+::link-card{title="Transcripts" href="/docs/transcripts" icon="transcript" description="Turn published captions into complete text or timed segments."}
+::link-card{title="Channels" href="/docs/channels" icon="channel" description="Inspect public channel identity, counts, artwork, and links."}
 :::
 
-## What you need
+## Who this guide is for
 
-You should have a TypeScript project and a runtime with the standard `fetch`,
-`URL`, and `Response` APIs. Node.js 18 or newer, Bun, Deno, and modern edge
-runtimes provide these APIs.
+This guide starts from the beginning. You should be able to follow it if you
+know how to open a terminal and edit a TypeScript file. When a new idea appears,
+we explain why it exists before showing its options.
 
-Install the package with your preferred package manager:
+If you already have an application, you can jump to a feature page or the
+[API reference](/docs/api). The chapters are still arranged in a useful reading
+order:
 
-:::tabs
-```bash title="npm"
-npm install just-yt
-```
+1. **Start Here** installs the package and makes one request.
+2. **Core Concepts** explains the client, sessions, concurrency, pagination,
+   and errors.
+3. **Features** covers each kind of public data separately.
+4. **Configuration** adds options only when there is a reason to use them.
+5. **Advanced** introduces the Effect-native API.
 
-```bash title="pnpm"
-pnpm add just-yt
-```
+## What you can build
 
-```bash title="yarn"
-yarn add just-yt
-```
+Common projects include a small research script, a channel dashboard, a search
+index, a transcript analysis tool, or a server that adds public YouTube details
+to its own records.
 
-```bash title="bun"
-bun add just-yt
-```
-:::
-
-The package includes its own TypeScript declarations. You do not need an
-additional `@types` package.
-
-## Create one client
-
-Import `YouTube` and create a client. No API key is needed.
+The Promise API is the best place to begin:
 
 ```ts
 import { YouTube } from 'just-yt';
 
 const youtube = new YouTube();
-```
-
-Creating the object does not make a network request. The first method call
-creates a session, and later calls reuse it. Keep one client for the lifetime of
-your application or job instead of creating one for every request.
-
-## Make your first request
-
-You can give `video` either an 11-character video ID or a normal YouTube URL.
-
-```ts
-const video = await youtube.video('https://www.youtube.com/watch?v=jNQXAC9IVRw');
+const video = await youtube.video('jNQXAC9IVRw');
 
 console.log(video.title);
-console.log(video.channel.name);
-console.log(video.viewCount);
 ```
 
-The result is a plain JavaScript object. TypeScript knows that `title` is a
-string and that fields YouTube may omit, such as `viewCount`, can be
-`undefined`. Check optional values instead of assuming every video has them:
+The result is a normal object. There is no special response wrapper to learn.
 
-```ts
-if (video.likeCount !== undefined) {
-  console.log(`${video.likeCount.toLocaleString()} likes`);
-}
-```
+## The boundary to remember
 
-## Search YouTube
+:::caution{title="Public data only"}
+The library does not sign in, read private or members-only content, download
+audio or video, or bypass YouTube's access controls.
+:::
 
-`search` returns a mixed list of videos, channels, and playlists. The `type`
-field lets TypeScript narrow each result to the right shape.
+Innertube is undocumented and YouTube can change it. `just-yt` isolates those
+changes behind typed models and clear errors, but no anonymous client can
+promise that every video will always be available.
 
-```ts
-const page = await youtube.search('typescript tutorial', { limit: 10 });
+## Your next step
 
-for (const result of page.results) {
-  if (result.type === 'video') {
-    console.log(result.title, result.durationText);
-  } else if (result.type === 'channel') {
-    console.log(result.title, result.subscriberCountText);
-  } else {
-    console.log(result.title, result.videoCount);
-  }
-}
-```
-
-## Close the client
-
-Long-running servers normally keep the client open. Short scripts should close
-it when they finish so the managed runtime can release its resources.
-
-```ts
-try {
-  const video = await youtube.video('jNQXAC9IVRw');
-  console.log(video.title);
-} finally {
-  await youtube.close();
-}
-```
-
-Next, follow the [quickstart](/docs/quickstart) for each common operation, then
-use [configuration](/docs/configuration) when you need locale, timeout, retry,
-or custom network settings.
+Continue to [installation](/docs/installation). It checks the small amount of
+setup you need and explains what each install command does.

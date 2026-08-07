@@ -6,15 +6,13 @@
  * abstract letterform next to a four-word sidebar is decoration standing in for
  * a brand. The package is called `just-yt`; setting that well is the logo.
  *
- * The weight split — `just-` quiet, `yt` at full contrast — is what keeps it
- * from reading as a stray line of text. It's one string to a screen reader and
- * one string on the clipboard; only the colour changes.
+ * It is set in one weight and one colour. Splitting `just-` off in grey made
+ * the wordmark read as two things — a qualifier and a product — when it is one
+ * package name, and one that people type in full.
  */
 ---
 
-<span class="logo">
-  <span class="quiet">just-</span>yt
-</span>
+<span class="logo">just-yt</span>
 
 <style>
   .logo {
@@ -26,15 +24,5 @@
     /* Tight, because the hyphen already puts a gap in the middle of the word. */
     letter-spacing: -0.025em;
     white-space: nowrap;
-  }
-
-  .quiet {
-    color: var(--muted);
-    transition: color 0.15s ease;
-  }
-
-  /* The whole name comes up to full contrast when it's a live link. */
-  :where(a):hover .quiet {
-    color: var(--text);
   }
 </style>

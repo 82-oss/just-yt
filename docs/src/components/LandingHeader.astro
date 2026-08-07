@@ -1,0 +1,193 @@
+---
+import Icon from './Icon.astro';
+import Logo from './Logo.astro';
+import { GITHUB_REPO } from '../lib/site';
+
+/**
+ * The landing page's own top bar. The docs keep their sidebar and breadcrumb
+ * topbar; this is a plain marketing header, so it carries the section links the
+ * sidebar would otherwise be holding.
+ */
+interface Props {
+  links: { label: string; href: string }[];
+  docsHref: string;
+}
+
+const { links, docsHref } = Astro.props;
+---
+
+<header class="header">
+  {/* The org, then the project. Only the project is a link — 82 OSS is the
+      house this ships from, not a second destination, and a dead link in the
+      first slot of a navigation bar is worse than plain text. */}
+  <div class="brand">
+    <span class="org">82 OSS</span>
+    <span class="brand-slash" aria-hidden="true"></span>
+    <a class="brand-link" href="/" aria-label="just-yt home">
+      <Logo />
+    </a>
+  </div>
+
+  <nav class="nav" aria-label="Sections">
+    {
+      links.map((link) => (
+        <a class="nav-link" href={link.href}>
+          {link.label}
+        </a>
+      ))
+    }
+  </nav>
+
+  <div class="actions">
+    <a
+      class="repo"
+      href={GITHUB_REPO}
+      rel="noreferrer noopener"
+      target="_blank"
+      aria-label="just-yt on GitHub"
+    >
+      <Icon name="github" />
+    </a>
+
+    <a class="docs-button" href={docsHref}>Documentation</a>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    height: var(--topbar-h);
+    padding: 0 var(--content-pad);
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    backdrop-filter: blur(12px);
+  }
+
+  .brand {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .org {
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+
+  /* Drawn rather than typed: a `/` glyph sits on the baseline and reads as
+     punctuation between two words. This is a divider, so it is a full-height
+     rule tipped over — the same separator Vercel-style headers use. */
+  .brand-slash {
+    width: 1px;
+    height: 20px;
+    background: var(--line-strong);
+    transform: rotate(20deg);
+  }
+
+  .brand-link {
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-sm);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-link {
+    flex: none;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .nav-link:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  .actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .repo {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .repo:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  .docs-button {
+    padding: 7px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .docs-button:hover {
+    background: var(--surface-hover);
+    border-color: var(--line-hover);
+  }
+
+  /* The hero's buttons already lead to both destinations, so a phone-width bar
+     keeps the wordmark and the controls rather than a scrolling link rail. */
+  @media (max-width: 720px) {
+    .header {
+      gap: 12px;
+    }
+
+    .nav {
+      display: none;
+    }
+
+    .brand {
+      margin-right: auto;
+    }
+
+    /* The org is the first thing a narrow bar can afford to lose. */
+    .org,
+    .brand-slash {
+      display: none;
+    }
+  }
+</style>

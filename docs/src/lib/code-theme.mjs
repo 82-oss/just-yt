@@ -1,9 +1,11 @@
 /**
- * Vercel-style syntax themes.
+ * The Vercel-style syntax theme.
  *
  * The keyword colour is the site accent, so code blocks tie into the rest of
  * the palette rather than sitting apart from it. Everything else follows the
  * Vercel reference: green strings, violet call expressions, blue properties.
+ *
+ * One theme, because the site is dark only — see src/styles/tokens.css.
  */
 
 const DARK = {
@@ -17,18 +19,7 @@ const DARK = {
   punctuation: '#8f8f8f',
 };
 
-const LIGHT = {
-  fg: '#171717',
-  bg: '#fafafa',
-  keyword: '#c01b55',
-  string: '#16794a',
-  fn: '#7c3aed',
-  property: '#0068d6',
-  comment: '#6e6e6e',
-  punctuation: '#6b6b6b',
-};
-
-/** TextMate rules are shared; only the palette differs between the two themes. */
+/** Split out from the palette so a colour is named once and used by scope. */
 function tokenColors(c) {
   return [
     {
@@ -101,10 +92,10 @@ function tokenColors(c) {
   ];
 }
 
-function theme(name, type, c) {
+function theme(name, c) {
   return {
     name,
-    type,
+    type: 'dark',
     colors: { 'editor.background': c.bg, 'editor.foreground': c.fg },
     // Shiki reads `tokenColors` only when `settings` is absent, so the rules go
     // in `settings` — global default first, scoped rules after it.
@@ -112,5 +103,4 @@ function theme(name, type, c) {
   };
 }
 
-export const codeThemeDark = theme('just-yt-dark', 'dark', DARK);
-export const codeThemeLight = theme('just-yt-light', 'light', LIGHT);
+export const codeTheme = theme('just-yt-dark', DARK);

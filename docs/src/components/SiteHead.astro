@@ -1,0 +1,46 @@
+---
+import { Font } from 'astro:assets';
+
+/**
+ * Everything inside `<head>`, shared by the docs shell and the landing page.
+ *
+ * `pageTitle` is the finished string rather than a fragment: the docs suffix
+ * every page with the package name, and the landing page leads with it, so
+ * composing it here would only mean a flag to opt out of.
+ */
+interface Props {
+  pageTitle: string;
+  description: string;
+}
+
+const { pageTitle, description } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="just-yt" />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+
+<Font cssVariable="--font-sans" preload />
+<Font cssVariable="--font-mono" />
+
+{/* The drawer starts closed on every load, before first paint — its state is
+    deliberately not remembered, since a panel that reopens itself on the next
+    page is a bug rather than a convenience. */}
+<script is:inline>
+  document.documentElement.dataset.drawer = 'closed';
+</script>

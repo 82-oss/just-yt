@@ -1,6 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Pager from './Pager.astro';
+import MarkdownMenu from './MarkdownMenu.astro';
 import DocsLayout from '../layouts/DocsLayout.astro';
 import { getPager, getSortedDocs, type Doc } from '../lib/docs';
 
@@ -13,12 +14,16 @@ interface Props {
 const { doc } = Astro.props;
 const { Content, headings } = await render(doc);
 const { prev, next } = getPager(await getSortedDocs(), doc);
+const markdownHref = `/docs/${doc.id}.md`;
 ---
 
 <DocsLayout title={doc.data.title} description={doc.data.description} headings={headings}>
   <article>
     <header class="doc-header">
-      <h1>{doc.data.title}</h1>
+      <div class="title-row">
+        <h1>{doc.data.title}</h1>
+        <MarkdownMenu markdownHref={markdownHref} />
+      </div>
       <p class="lead">{doc.data.description}</p>
     </header>
 
@@ -39,11 +44,19 @@ const { prev, next } = getPager(await getSortedDocs(), doc);
   }
 
   h1 {
-    margin: 0 0 14px;
+    margin: 0;
     font-size: clamp(1.75rem, 3.5vw, 2.25rem);
     font-weight: 600;
     letter-spacing: -0.03em;
     line-height: 1.15;
+  }
+
+  .title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 14px;
   }
 
   .lead {

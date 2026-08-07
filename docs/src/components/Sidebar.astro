@@ -4,8 +4,8 @@ import Icon from './Icon.astro';
 import Logo from './Logo.astro';
 import SearchTrigger from './SearchTrigger.astro';
 import SidebarNav from './SidebarNav.astro';
-import ThemeToggle from './ThemeToggle.astro';
 import type { DocGroup } from '../lib/docs';
+import { GITHUB_REPO } from '../lib/site';
 import { VERSION } from '../lib/version';
 
 interface Props {
@@ -26,7 +26,6 @@ const { groups, pathname } = Astro.props;
     </a>
 
     <div class="head-actions">
-      <ThemeToggle />
       {/* An open drawer covers the topbar's copy of this button, so the panel
           carries its own. Hidden above the breakpoint, where it has no job. */}
       <DrawerToggle />
@@ -40,10 +39,13 @@ const { groups, pathname } = Astro.props;
   <div class="scroller">
     <SidebarNav groups={groups} pathname={pathname} />
   </div>
+  <div class="scroll-indicator" data-sidebar-scroll-indicator aria-hidden="true">
+    <span data-sidebar-scroll-thumb></span>
+  </div>
 
   <footer class="foot">
     <span class="version">v{VERSION}</span>
-    <a class="repo" href="https://github.com/spheceo/just-yt" rel="noreferrer noopener" target="_blank">
+    <a class="repo" href={GITHUB_REPO} rel="noreferrer noopener" target="_blank">
       <Icon name="github" size={14} />
       GitHub
     </a>
@@ -58,8 +60,7 @@ const { groups, pathname } = Astro.props;
     display: flex;
     flex-direction: column;
     width: var(--sidebar-w);
-    border-right: 1px solid var(--line);
-    background: var(--surface);
+    background: transparent;
   }
 
   .head {
@@ -69,7 +70,10 @@ const { groups, pathname } = Astro.props;
     justify-content: space-between;
     gap: 8px;
     height: var(--topbar-h);
-    padding: 0 var(--sidebar-pad);
+    width: var(--sidebar-inner-w);
+    margin-left: auto;
+    margin-right: var(--sidebar-right-gap);
+    padding: 0;
   }
 
   .brand {
@@ -88,7 +92,10 @@ const { groups, pathname } = Astro.props;
 
   .search-slot {
     flex: none;
-    padding: 6px var(--sidebar-pad) 18px;
+    width: var(--sidebar-inner-w);
+    margin-left: auto;
+    margin-right: var(--sidebar-right-gap);
+    padding: 6px 0 18px;
   }
 
   .scroller {
@@ -96,10 +103,41 @@ const { groups, pathname } = Astro.props;
     min-height: 0;
     /* Pulled in so the nav pills' padding lines up with the search field above
        them, rather than the pills themselves. */
-    padding: 0 calc(var(--sidebar-pad) - 12px) 24px;
+    width: calc(var(--sidebar-inner-w) + 24px);
+    margin-left: auto;
+    margin-right: calc(var(--sidebar-right-gap) - 12px);
+    padding: 0 0 24px;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+  }
+
+  .scroller::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scroll-indicator {
+    position: absolute;
+    top: calc(var(--topbar-h) + 62px);
+    right: 5px;
+    bottom: 52px;
+    width: 3px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.24s ease;
+  }
+
+  .scroll-indicator[data-visible] {
+    opacity: 1;
+  }
+
+  .scroll-indicator span {
+    position: absolute;
+    inset: 0 0 auto;
+    min-height: 28px;
+    border-radius: var(--radius-pill);
+    background: var(--line-hover);
+    will-change: height, transform;
   }
 
   .foot {
@@ -108,8 +146,10 @@ const { groups, pathname } = Astro.props;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 12px var(--sidebar-pad);
-    border-top: 1px solid var(--line);
+    width: var(--sidebar-inner-w);
+    margin-left: auto;
+    margin-right: var(--sidebar-right-gap);
+    padding: 12px 0;
     font-size: var(--text-xs);
   }
 
@@ -143,8 +183,22 @@ const { groups, pathname } = Astro.props;
      shadow — the only place the open/close motion survives. */
   @media (max-width: 1000px) {
     .sidebar {
+      width: min(var(--sidebar-w), 88vw);
+      background: var(--bg);
       box-shadow: var(--shadow);
       transition: transform var(--duration) var(--ease);
+    }
+
+    .head,
+    .search-slot,
+    .foot {
+      width: auto;
+      margin-inline: var(--sidebar-pad);
+    }
+
+    .scroller {
+      width: auto;
+      margin-inline: calc(var(--sidebar-pad) - 12px);
     }
 
     :global(:root:not([data-drawer='open'])) .sidebar {
@@ -152,3 +206,42 @@ const { groups, pathname } = Astro.props;
     }
   }
 </style>
+
+<script>
+  const scroller = document.querySelector<HTMLElement>('#docs-sidebar .scroller');
+  const indicator = document.querySelector<HTMLElement>('[data-sidebar-scroll-indicator]');
+  const thumb = indicator?.querySelector<HTMLElement>('[data-sidebar-scroll-thumb]');
+
+  if (scroller && indicator && thumb) {
+    let hideTimer: number | undefined;
+
+    const updateThumb = () => {
+      const viewport = scroller.clientHeight;
+      const content = scroller.scrollHeight;
+      const track = indicator.clientHeight;
+
+      if (content <= viewport || track <= 0) {
+        indicator.removeAttribute('data-visible');
+        return;
+      }
+
+      const height = Math.max(28, track * (viewport / content));
+      const progress = scroller.scrollTop / Math.max(1, content - viewport);
+      const top = progress * (track - height);
+
+      thumb.style.height = `${height}px`;
+      thumb.style.transform = `translateY(${top}px)`;
+    };
+
+    const reveal = () => {
+      updateThumb();
+      indicator.setAttribute('data-visible', '');
+      clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(() => indicator.removeAttribute('data-visible'), 700);
+    };
+
+    scroller.addEventListener('scroll', reveal, { passive: true });
+    window.addEventListener('resize', updateThumb, { passive: true });
+    updateThumb();
+  }
+</script>

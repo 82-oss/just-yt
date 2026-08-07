@@ -1,71 +1,32 @@
 ---
-title: Guides
-description: Build reliable scripts and services with pagination, tagged errors, shared clients, and the Effect-native provider.
-group: Explore
-order: 1
+title: Handling errors
+label: Errors
+description: Recognize expected failures, respond to tagged errors, and keep one unavailable resource from hiding successful work.
+group: Core Concepts
+order: 4
 ---
 
-## Build a small search report
+A request can fail even when your code is correct. A video may be deleted, a
+caption track may not exist, the network may time out, or YouTube may change an
+undocumented response. Good error handling tells these situations apart.
 
-Search results form a discriminated union. Check `result.type` before reading
-fields that belong only to videos, channels, or playlists.
+## Start with one try and catch
 
-```ts
-import { YouTube } from 'just-yt';
-
-const youtube = new YouTube();
-const page = await youtube.search('typescript for beginners', {
-  type: 'video',
-  uploadDate: 'year',
-  limit: 50,
-});
-
-const rows = page.results.flatMap((result) =>
-  result.type === 'video'
-    ? [{
-        title: result.title,
-        channel: result.author?.name ?? 'Unknown channel',
-        views: result.viewCount ?? 0,
-        url: result.url,
-      }]
-    : [],
-);
-
-console.table(rows.sort((a, b) => b.views - a.views));
-await youtube.close();
-```
-
-Missing values are not silently changed to zero by the SDK. The example uses
-`?? 0` only because this particular report needs a sortable fallback.
-
-## Paginate without loading everything
-
-`limit` is convenient for a known, modest number of results. For larger or
-open-ended jobs, fetch one page at a time and persist the continuation token.
+JavaScript sends a rejected Promise to `catch`:
 
 ```ts
-let continuation: string | undefined;
-
-do {
-  const page = await youtube.search('web development', {
-    type: 'video',
-    continuation,
-  });
-
-  await saveResults(page.results);
-  continuation = page.continuation;
-  await saveCheckpoint(continuation);
-} while (continuation);
+try {
+  const transcript = await youtube.transcript(videoId);
+  console.log(transcript.data);
+} catch (error) {
+  console.error('Could not read the transcript', error);
+}
 ```
 
-Continuation tokens are opaque and tied to YouTube's result feed. Do not parse
-or edit them. They may expire, so a durable importer should be able to restart a
-fresh search.
+That is enough for a small script. An application often needs a more specific
+response, so `just-yt` exports tagged error classes.
 
-## Handle tagged errors
-
-Promise methods reject with the SDK's tagged error objects. Narrow `unknown`
-with `instanceof`, or inspect `_tag` when you prefer a switch.
+## Match the errors you can handle
 
 ```ts
 import {
@@ -79,7 +40,7 @@ try {
   return await youtube.transcript(videoId, { language: 'en' });
 } catch (error) {
   if (error instanceof NotFoundError) {
-    return null; // no matching video or caption track
+    return null;
   }
 
   if (error instanceof UnavailableError) {
@@ -92,104 +53,44 @@ try {
   }
 
   if (error instanceof ExtractionError) {
-    // YouTube returned a renderer shape the installed SDK could not parse.
-    console.error('Parser drift at:', error.path);
+    console.error('Response changed near:', error.path);
   }
 
   throw error;
 }
 ```
 
-An unavailable result is not automatically a bug: videos can be private,
-age-gated, region-blocked, members-only, or refused to anonymous clients.
-`ExtractionError` is different—it is a useful signal that YouTube may have
-changed an undocumented response.
+Only return a fallback when it makes sense for your program. The final
+`throw error` preserves failures this function does not know how to handle.
 
-## Share a client in a server
+## What the tags mean
 
-Create the client outside the request handler so all calls reuse one session.
+| Error | Meaning | A common response |
+| --- | --- | --- |
+| `NotFoundError` | The requested ID or transcript track was not found. | Show “not found” or skip the item. |
+| `UnavailableError` | A video exists but YouTube will not serve it to this anonymous client. | Show the supplied reason when appropriate. |
+| `NetworkError` | A request could not reach YouTube or its body could not be read. | Retry later or report temporary failure. |
+| `InnertubeError` | YouTube returned a non-success HTTP status. | Log the endpoint and status. |
+| `ExtractionError` | The response shape did not match what this SDK understands. | Report it as possible parser drift. |
+| `SessionError` | The shared session could not be established. | Check configuration and upstream access. |
+
+## Bulk methods capture item failures
+
+`videos()`, `channels()`, and `transcripts()` return one result for every input.
+One bad target does not reject or cancel the rest:
 
 ```ts
-import { YouTube } from 'just-yt';
+const results = await youtube.videos(videoIds);
 
-const youtube = new YouTube({ location: 'ZA' });
-
-export async function GET(request: Request): Promise<Response> {
-  const id = new URL(request.url).searchParams.get('id');
-  if (!id) return new Response('Missing id', { status: 400 });
-
-  try {
-    return Response.json(await youtube.video(id));
-  } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 502 },
-    );
+for (const result of results) {
+  if (result.ok) {
+    console.log(result.value.title);
+  } else {
+    console.warn(result.target, result.error._tag);
   }
 }
 ```
 
-Call `close()` during your application's shutdown hook, not at the end of every
-incoming request.
-
-## Use the Effect provider
-
-The Promise client is the recommended starting point. If your application
-already uses Effect, `YouTubeApi` exposes the same operations as typed Effects,
-and `layer()` provides its configuration, session, and Innertube transport.
-
-```ts
-import { Effect } from 'effect';
-import { YouTubeApi, layer } from 'just-yt';
-
-const program = Effect.gen(function* () {
-  const youtube = yield* YouTubeApi;
-
-  return yield* youtube.video('dQw4w9WgXcQ').pipe(
-    Effect.catchTag('UnavailableError', (error) =>
-      Effect.succeed({ unavailable: error.reason ?? error.status }),
-    ),
-  );
-});
-
-const result = await Effect.runPromise(
-  program.pipe(Effect.provide(layer({ location: 'ZA' }))),
-);
-```
-
-The service also provides streaming search. It follows continuations lazily and
-stops when the stream is interrupted or YouTube runs out of results.
-
-```ts
-import { Effect, Stream } from 'effect';
-import { YouTubeApi, layer } from 'just-yt';
-
-const program = Effect.gen(function* () {
-  const youtube = yield* YouTubeApi;
-
-  return yield* youtube.searchStream('typescript', { type: 'video' }).pipe(
-    Stream.take(100),
-    Stream.runCollect,
-  );
-});
-
-const results = await Effect.runPromise(program.pipe(Effect.provide(layer())));
-```
-
-For advanced integrations, the same layer also exposes `Innertube` and
-`Session`. Those are lower-level APIs: raw Innertube response shapes are
-undocumented and may change, so keep them behind your own adapter.
-
-```ts
-import { Effect } from 'effect';
-import { Innertube, layer } from 'just-yt';
-
-const rawBrowse = Effect.gen(function* () {
-  const innertube = yield* Innertube;
-  return yield* innertube.execute('/browse', { browseId: 'UC...' });
-});
-
-const response = await Effect.runPromise(
-  rawBrowse.pipe(Effect.provide(layer())),
-);
-```
+The overall call can still reject when shared infrastructure, such as session
+creation, cannot run. This is the difference between “one item failed” and
+“the job could not start.”

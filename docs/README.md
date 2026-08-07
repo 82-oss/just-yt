@@ -26,10 +26,14 @@ order: 3                        # position within the group
 ---
 ```
 
-There is no overview page. The first doc in reading order is served at `/`
-itself by `src/pages/index.astro`; every other doc lives under `/docs/`. That
-doc is named by `HOME_DOC_ID` in `src/lib/docs.ts`, and the build fails if a
-reordering leaves the constant pointing somewhere else.
+Every doc lives under `/docs/`, and there is no overview page — bare `/docs`
+redirects to the first one. `/` is the landing page (`src/pages/index.astro`),
+which is marketing rather than documentation: it has its own shell
+(`src/layouts/LandingLayout.astro`) and its own hand-written snippets. Its "Get
+started" button follows `getDocsEntryHref()`, so reordering the collection moves
+the entry point with it. The Markdown pipeline never runs there, so its code
+blocks come from `src/components/CodePanel.astro`, which reuses the same syntax
+themes.
 
 ## Authoring
 
@@ -66,12 +70,16 @@ Every code block gets a copy button; the behaviour lives in
 
 ## Theming
 
-Colours and scale live in `src/styles/tokens.css` — dark is the default, and
-`:root[data-theme='light']` overrides it. The interface is monochrome: the
-accent is the foreground colour, so emphasis comes from contrast and weight.
-Two things are allowed colour — code blocks, which keep the Vercel-style syntax
+Colours and scale live in `src/styles/tokens.css`. The site is dark only —
+there is no light palette, no toggle and no stored preference, so a component
+has one surface to be designed against. The interface is monochrome: the accent
+is the foreground colour, so emphasis comes from contrast and weight. Two
+things are allowed colour — code blocks, which keep the Vercel-style syntax
 theme built in `src/lib/code-theme.mjs` rather than pulled from Shiki's bundle,
 and the `--tone-*` callout hues, where the colour carries the meaning.
+
+Hovered borders use `--line-hover`, not `--accent`: a control that outlines
+itself in white on hover reads as focused rather than merely pointed at.
 
 Component styles are scoped to their own `.astro` files; `src/styles/global.css`
 holds only the reset, prose, and markdown styles. Fonts (Inter and JetBrains

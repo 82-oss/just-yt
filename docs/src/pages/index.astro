@@ -1,11 +1,480 @@
 ---
-import DocPage from '../components/DocPage.astro';
-import { getSortedDocs } from '../lib/docs';
+import { getEntry, render } from 'astro:content';
+import LandingLayout from '../layouts/LandingLayout.astro';
+import { getDocsEntryHref, getLandingNavLinks } from '../lib/docs';
+import { VERSION } from '../lib/version';
 
-// `/` is the opening page of the documentation, not a redirect to it. Serving a
-// meta-refresh here meant every visitor watched a bare "Redirecting…" frame
-// before the real page arrived.
-const [doc] = await getSortedDocs();
+const landing = await getEntry('landing', 'index');
+if (!landing) throw new Error('Missing src/content/landing/index.md');
+
+const { Content } = await render(landing);
+const docsHref = await getDocsEntryHref();
+const links = await getLandingNavLinks();
 ---
 
-<DocPage doc={doc} />
+<LandingLayout
+  pageTitle={landing.data.title}
+  description={landing.data.description}
+  links={links}
+  docsHref={docsHref}
+>
+  <div class="landing-content prose">
+    <p class="badge" aria-label={`just-yt version ${VERSION}`}>
+      <span class="badge-name">just-yt</span>
+      <span class="badge-sep" aria-hidden="true">·</span>
+      <span class="badge-version">v{VERSION}</span>
+    </p>
+    <Content />
+  </div>
+</LandingLayout>
+
+<style>
+  .landing-content {
+    max-width: none;
+  }
+
+  .badge {
+    position: absolute;
+    top: calc(var(--topbar-h) + clamp(40px, 7vh, 80px));
+    left: 50%;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: max-content;
+    margin: 0;
+    padding: 5px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--text);
+    font-size: var(--text-xs);
+    transform: translateX(-50%);
+  }
+
+  .badge-name {
+    font-weight: 600;
+  }
+
+  .badge-sep,
+  .badge-version {
+    color: var(--faint);
+    font-family: var(--font-mono);
+  }
+
+  :global(.landing-hero) {
+    padding: calc(clamp(40px, 7vh, 80px) + 62px) var(--content-pad) clamp(48px, 7vh, 88px);
+    text-align: center;
+  }
+
+  :global(.landing-hero h1) {
+    max-width: 16ch;
+    margin: 0 auto;
+    color: var(--text);
+    font-size: clamp(2.5rem, 7.5vw, 4.5rem);
+    font-weight: 600;
+    letter-spacing: -0.045em;
+    line-height: 1.03;
+  }
+
+  :global(.landing-hero > p:first-of-type) {
+    max-width: 54ch;
+    margin: 26px auto 0;
+    color: var(--muted);
+    font-size: var(--text-lg);
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  :global(.hero-onramp) {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    margin: 34px auto 0;
+  }
+
+  :global(.hero-onramp-tabs) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  :global(.hero-onramp-tabs > span) {
+    width: 1px;
+    height: 14px;
+    background: var(--line-strong);
+  }
+
+  :global(.hero-onramp-tabs button) {
+    padding: 2px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--faint);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  :global(.hero-onramp-tabs button:hover),
+  :global(.hero-onramp-tabs button[aria-selected='true']) {
+    color: var(--text);
+  }
+
+  :global(.hero-onramp-tabs button[aria-selected='true']) {
+    font-weight: 600;
+  }
+
+  :global(.hero-onramp-panel) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: max-content;
+    max-width: 100%;
+    min-height: 46px;
+    padding: 10px 18px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--surface) 64%, transparent);
+    color: var(--text);
+  }
+
+  :global(.hero-onramp-panel[hidden]) {
+    display: none;
+  }
+
+  :global(.hero-command-prefix) {
+    color: var(--faint);
+    font-family: var(--font-mono);
+  }
+
+  :global(.prose .hero-onramp-panel code) {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  :global(.hero-agent-panel) {
+    position: relative;
+    gap: 12px;
+    padding-inline: 16px 20px;
+  }
+
+  :global(.hero-agent-icons) {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-right: 4px;
+  }
+
+  :global(.hero-agent-icon) {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    color: var(--muted);
+    transition:
+      color 0.15s ease,
+      transform 0.2s var(--ease);
+  }
+
+  :global(.hero-agent-icon svg) {
+    width: 16px;
+    height: 16px;
+  }
+
+  :global(.hero-agent-icon:nth-child(1)) {
+    transform: rotate(-12deg);
+  }
+
+  :global(.hero-agent-icon:nth-child(2)) {
+    transform: rotate(8deg) translateY(-1px);
+  }
+
+  :global(.hero-agent-icon:nth-child(3)) {
+    transform: rotate(-8deg);
+  }
+
+  :global(.hero-agent-panel:hover .hero-agent-icon) {
+    color: var(--text);
+  }
+
+  :global(.hero-agent-panel:hover .hero-agent-icon:nth-child(1)) {
+    transform: rotate(-16deg) translateY(1px);
+  }
+
+  :global(.hero-agent-panel:hover .hero-agent-icon:nth-child(2)) {
+    transform: rotate(12deg) translateY(-2px);
+  }
+
+  :global(.hero-agent-panel:hover .hero-agent-icon:nth-child(3)) {
+    transform: rotate(-12deg) translateY(1px);
+  }
+
+  :global(.hero-agent-panel button) {
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  :global(.hero-copy-status) {
+    position: absolute;
+    left: calc(100% + 12px);
+    width: max-content;
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+
+  :global(.landing-hero > p:last-of-type),
+  :global(.landing-closing > p:last-of-type) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin: 36px 0 0;
+  }
+
+  :global(.landing-hero > p:last-of-type a),
+  :global(.landing-closing > p:last-of-type a) {
+    display: inline-flex;
+    align-items: center;
+    padding: 11px 22px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 500;
+    text-decoration: none;
+    transition:
+      background-color 0.15s ease,
+      opacity 0.15s ease;
+  }
+
+  :global(.landing-hero > p:last-of-type a:first-child),
+  :global(.landing-closing > p:last-of-type a:first-child) {
+    border-color: var(--text);
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  :global(.landing-hero > p:last-of-type a:hover),
+  :global(.landing-closing > p:last-of-type a:hover) {
+    opacity: 0.88;
+  }
+
+  :global(.landing-feature) {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-rows: auto auto;
+    column-gap: clamp(32px, 4.5vw, 64px);
+    row-gap: 16px;
+    align-items: center;
+    width: min(1000px, calc(100% - (var(--content-pad) * 2)));
+    margin: 0 auto;
+    padding: clamp(56px, 7vh, 96px) 0;
+    border-top: 0;
+  }
+
+  :global(.landing-feature::before),
+  :global(.landing-closing::before) {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 100vw;
+    height: 1px;
+    transform: translateX(-50%);
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      color-mix(in srgb, var(--line) 35%, transparent) 12%,
+      var(--line-strong) 50%,
+      color-mix(in srgb, var(--line) 35%, transparent) 88%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+
+  :global(.landing-feature h2) {
+    grid-column: 1;
+    align-self: end;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--text);
+    font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+  }
+
+  :global(.landing-feature > p) {
+    grid-column: 1;
+    align-self: start;
+    max-width: 38ch;
+    margin: 0;
+    color: var(--muted);
+  }
+
+  :global(.landing-feature > .code-card) {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  :global(.landing-closing) {
+    position: relative;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: clamp(64px, 12vh, 128px) var(--content-pad);
+    text-align: center;
+    border-top: 0;
+  }
+
+  :global(.landing-closing h2) {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--text);
+    font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+  }
+
+  :global(.landing-closing > p:first-of-type) {
+    max-width: 52ch;
+    margin: 20px auto 0;
+  }
+
+  :global(.landing-closing > .code-card) {
+    max-width: 340px;
+    margin: 32px auto 0;
+    text-align: left;
+  }
+
+  @media (max-width: 900px) {
+    :global(.landing-feature) {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto;
+      width: min(720px, calc(100% - (var(--content-pad) * 2)));
+      text-align: center;
+    }
+
+    :global(.landing-feature h2),
+    :global(.landing-feature > p),
+    :global(.landing-feature > .code-card) {
+      grid-column: 1;
+      grid-row: auto;
+    }
+
+    :global(.landing-feature > p) {
+      max-width: 46ch;
+      margin-inline: auto;
+    }
+
+    :global(.landing-feature > .code-card) {
+      text-align: left;
+    }
+  }
+
+  @media (max-width: 640px) {
+    :global(.landing-hero h1) {
+      max-width: none;
+    }
+
+    :global(.hero-copy-status) {
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  }
+</style>
+
+<script>
+  const onramp = document.querySelector<HTMLElement>('[data-hero-onramp]');
+
+  if (onramp) {
+    const tabs = [...onramp.querySelectorAll<HTMLButtonElement>('[data-onramp-tab]')];
+    const panels = [...onramp.querySelectorAll<HTMLElement>('[data-onramp-panel]')];
+    const copyButton = onramp.querySelector<HTMLButtonElement>('[data-copy-agent-prompt]');
+    const copyStatus = onramp.querySelector<HTMLElement>('[data-agent-copy-status]');
+
+    const selectTab = (selected: HTMLButtonElement) => {
+      for (const tab of tabs) {
+        const active = tab === selected;
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+      }
+
+      for (const panel of panels) {
+        panel.toggleAttribute('hidden', panel.dataset.onrampPanel !== selected.dataset.onrampTab);
+      }
+    };
+
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => selectTab(tab));
+      tab.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const current = tabs.indexOf(tab);
+        const next =
+          event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? tabs.length - 1
+              : event.key === 'ArrowRight'
+                ? (current + 1) % tabs.length
+                : (current - 1 + tabs.length) % tabs.length;
+        selectTab(tabs[next]);
+        tabs[next].focus();
+      });
+    }
+
+    copyButton?.addEventListener('click', async () => {
+      const startUrl = new URL('/start.md', window.location.href).href;
+      const prompt = `Read ${startUrl}, then help me take advantage of this SDK in my current project. Follow the guide and get my confirmation before creating or changing files.`;
+      let copied = false;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(prompt);
+          copied = true;
+        } catch {
+          // Fall through to the textarea path used by non-secure local previews.
+        }
+      }
+
+      if (!copied) {
+        const field = document.createElement('textarea');
+        field.value = prompt;
+        field.setAttribute('readonly', '');
+        field.style.cssText = 'position:fixed;top:-9999px;opacity:0';
+        document.body.append(field);
+        field.select();
+        copied = document.execCommand('copy');
+        field.remove();
+      }
+
+      if (copyStatus) copyStatus.textContent = copied ? '' : 'Copy failed';
+      if (copied) {
+        copyButton.textContent = 'Copied';
+        window.setTimeout(() => {
+          copyButton.textContent = 'Copy prompt';
+          if (copyStatus) copyStatus.textContent = '';
+        }, 1200);
+      }
+    });
+  }
+</script>

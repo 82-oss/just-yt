@@ -1,6 +1,11 @@
 /*
  * Design tokens.
  *
+ * The site is dark, and only dark. There is no light theme and no toggle: one
+ * surface to design against is worth more here than a preference, and every
+ * screenshot, code sample and callout can then be tuned for it rather than for
+ * whichever of two palettes the reader happens to be on.
+ *
  * The interface is monochrome — the accent is simply the foreground colour, so
  * emphasis comes from contrast and weight rather than hue. Two things are
  * allowed colour: code blocks, which keep their own palette
@@ -13,7 +18,7 @@
  */
 
 :root {
-  /* Palette — dark */
+  /* Palette */
   --bg: #000000;
   --surface: #0a0a0a;
   --surface-hover: #171717;
@@ -23,6 +28,10 @@
   --faint: #6e6e6e;
   --line: #1f1f1f;
   --line-strong: #2e2e2e;
+  /* Borders on hover. Brighter than the resting rule, and deliberately short of
+     the foreground: a control that outlines itself in white on hover reads as
+     focused rather than merely pointed at. */
+  --line-hover: #4a4a4a;
   --accent: #ffffff;
   --accent-quiet: #101010;
   --accent-contrast: #000000;
@@ -47,7 +56,9 @@
   --text-xl: 1.375rem;
 
   /* Layout */
-  --sidebar-w: 276px;
+  --sidebar-w: clamp(292px, 22vw, 344px);
+  --sidebar-inner-w: 248px;
+  --sidebar-right-gap: clamp(18px, 2vw, 28px);
   --topbar-h: 56px;
   --toc-w: 220px;
   --content-max: 720px;
@@ -55,10 +66,10 @@
   --sidebar-pad: 18px;
 
   /* Shape */
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
   --radius-pill: 999px;
 
   /* Motion — one duration and curve so the panel and content stay in step. */
@@ -66,31 +77,4 @@
   --duration: 320ms;
 
   color-scheme: dark;
-}
-
-:root[data-theme='light'] {
-  --bg: #ffffff;
-  --surface: #fafafa;
-  --surface-hover: #f2f2f2;
-  --surface-raised: #ffffff;
-  --text: #171717;
-  --muted: #5f5f5f;
-  --faint: #8a8a8a;
-  --line: #ebebeb;
-  --line-strong: #d4d4d4;
-  --accent: #171717;
-  --accent-quiet: #f5f5f5;
-  --accent-contrast: #ffffff;
-  --soft: #f5f5f5;
-  --code: #fafafa;
-  --shadow: 0 16px 40px rgb(0 0 0 / 0.1);
-  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.08);
-  --backdrop: rgb(0 0 0 / 0.25);
-
-  --tone-note: #2563eb;
-  --tone-tip: #0f7a5a;
-  --tone-warning: #a35c07;
-  --tone-danger: #c2323c;
-
-  color-scheme: light;
 }
