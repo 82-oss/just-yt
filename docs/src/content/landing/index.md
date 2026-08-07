@@ -66,6 +66,9 @@ const page = await yt.search('effect ts', {
   features: ['hd', 'subtitles'],
 });
 
+page.results[0].title; // 'Effect.ts Tutorial'
+page.results[0].viewCount; // 128000
+
 const many = await yt.search('effect ts', {
   limit: 100,
 });
@@ -84,13 +87,14 @@ const text = await yt.transcript(id, {
   language: 'en',
 });
 
-text.data; // one normalized paragraph
+text.title; // 'Rick Astley - Never Gonna Give You Up (Official Video)'
+text.data; // "We're no strangers to love You know the rules and I've been…"
 
 const timed = await yt.transcript(id, {
   segmented: true,
 });
 
-timed.data; // [{ start, end, text }, …]
+timed.data[0]; // { start: 18.0, end: 21.5, text: "We're no strangers to love" }
 ```
 :::
 

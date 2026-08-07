@@ -57,7 +57,7 @@ import { YouTube } from 'just-yt';
 const yt = new YouTube();
 const video = await yt.video('jNQXAC9IVRw');
 
-console.log(video.title);
+console.log(video.title); // Me at the zoo
 ```
 
 The result is a normal object. There is no special response wrapper to learn.

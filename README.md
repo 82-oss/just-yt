@@ -56,6 +56,7 @@ for (const result of videos) {
 
 // Autocomplete
 const suggestions = await yt.suggestions("effect t");
+// → ["effect ts", "effect typescript", "effect tutorial"]
 
 await yt.close();
 ```

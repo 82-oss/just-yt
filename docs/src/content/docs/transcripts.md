@@ -14,8 +14,8 @@ search, analysis, summaries, and accessibility workflows.
 ```ts
 const transcript = await yt.transcript('dQw4w9WgXcQ');
 
-console.log(transcript.title);
-console.log(transcript.data);
+transcript.title; // 'Rick Astley - Never Gonna Give You Up (Official Video)'
+transcript.data; // "We're no strangers to love You know the rules and I've been…"
 ```
 
 By default, `data` is one whitespace-normalized paragraph. The SDK removes
@@ -30,6 +30,9 @@ Use a language code or the displayed track name:
 const spanish = await yt.transcript('dQw4w9WgXcQ', {
   language: 'es',
 });
+
+spanish.title; // 'Rick Astley - Never Gonna Give You Up (Official Video)'
+spanish.data; // Spanish caption text as one normalized paragraph
 ```
 
 If no matching track exists, the Promise rejects with `NotFoundError`. The
@@ -44,6 +47,8 @@ Set `segmented: true` when your application needs to connect text to playback:
 const transcript = await yt.transcript('dQw4w9WgXcQ', {
   segmented: true,
 });
+
+transcript.data[0]; // { start: 18.0, end: 21.5, text: "We're no strangers to love" }
 
 for (const segment of transcript.data) {
   console.log(segment.start, segment.end, segment.text);
@@ -62,6 +67,9 @@ const results = await yt.transcripts(videoIds, {
   segmented: true,
   concurrency: 2,
 });
+
+results[0].ok; // true
+results[0].value.data[0].text; // first caption line when captions exist
 ```
 
 Each missing caption track becomes a failed item without discarding successful

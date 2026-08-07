@@ -20,6 +20,10 @@ const results = await yt.videos([
   'dQw4w9WgXcQ',
   'aqz-KE-bpKQ',
 ]);
+
+results[0].value.title; // 'Me at the zoo'
+results[1].value.title; // 'Never Gonna Give You Up'
+results[2].value.title; // 'Big Buck Bunny'
 ```
 
 Plural methods use a concurrency of `2` by default. At most two complete target

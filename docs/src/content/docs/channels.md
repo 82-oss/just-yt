@@ -25,11 +25,10 @@ directly is clearer than extracting it yourself.
 ```ts
 const channel = await yt.channel('@veritasium');
 
-console.log(channel.title);
-console.log(channel.handle);
-console.log(channel.description);
-console.log(channel.subscriberCountText);
-console.log(channel.links);
+channel.title; // 'Veritasium'
+channel.handle; // '@veritasium'
+channel.subscriberCountText; // '21M subscribers'
+channel.links[0].title; // 'Twitter'
 ```
 
 The result can include thumbnails, a banner, subscriber and video counts,
@@ -50,6 +49,7 @@ const results = await yt.channels(
 
 for (const result of results) {
   if (result.ok) console.log(result.value.title);
+  // → 'Veritasium', 'Computerphile', …
   else console.warn(result.target, result.error._tag);
 }
 ```

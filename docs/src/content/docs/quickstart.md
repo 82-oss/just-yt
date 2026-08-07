@@ -19,9 +19,9 @@ import { YouTube } from 'just-yt';
 const yt = new YouTube();
 const video = await yt.video('jNQXAC9IVRw');
 
-console.log(video.title);
-console.log(video.channel.name);
-console.log(video.viewCount);
+console.log(video.title); // Me at the zoo
+console.log(video.channel.name); // jawed
+console.log(video.viewCount); // 403130789
 
 await yt.close();
 ```
@@ -73,6 +73,7 @@ try {
   const channel = await yt.channel(video.channel.id!);
 
   console.log(video.title, channel.title);
+  // → Me at the zoo Veritasium
 } finally {
   await yt.close();
 }

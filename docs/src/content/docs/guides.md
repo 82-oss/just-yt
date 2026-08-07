@@ -85,8 +85,10 @@ const results = await yt.videos(videoIds);
 for (const result of results) {
   if (result.ok) {
     console.log(result.value.title);
+    // → 'Me at the zoo', …
   } else {
     console.warn(result.target, result.error._tag);
+    // → 'deletedVideoId' 'NotFoundError'
   }
 }
 ```

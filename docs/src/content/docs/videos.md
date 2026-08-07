@@ -16,6 +16,8 @@ const byId = await yt.video('jNQXAC9IVRw');
 const byUrl = await yt.video(
   'https://www.youtube.com/watch?v=jNQXAC9IVRw',
 );
+
+byId.id; // 'jNQXAC9IVRw' — same video either way
 ```
 
 Common `watch`, `youtu.be`, `shorts`, `embed`, and `live` URL forms are
@@ -26,14 +28,12 @@ accepted. Internally, the SDK extracts the video ID before requesting metadata.
 ```ts
 const video = await yt.video('jNQXAC9IVRw');
 
-console.log({
-  title: video.title,
-  channel: video.channel.name,
-  durationSeconds: video.durationSeconds,
-  views: video.viewCount,
-  publishedAt: video.publishedAt,
-  captions: video.captions,
-});
+video.title; // 'Me at the zoo'
+video.channel.name; // 'jawed'
+video.durationSeconds; // 19
+video.viewCount; // 403130789
+video.publishedAt; // '2005-04-23T20:57:27-07:00'
+video.captions; // true
 ```
 
 Optional values are `undefined` when YouTube did not supply them. The SDK does
@@ -59,6 +59,9 @@ type.
 
 ```ts
 const results = await yt.videos(videoIds, { concurrency: 2 });
+
+results[0].value.title; // 'Me at the zoo'
+results[1].value.title; // 'Never Gonna Give You Up'
 ```
 
 Use the plural method when each target should succeed or fail independently.
