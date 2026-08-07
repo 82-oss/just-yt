@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.17 — 2026-08-07
+
+- Default the client timezone to `America/New_York` so the out-of-box US locale persona stays internally consistent instead of inheriting the host timezone.
+
 ## 0.0.16 — 2026-08-07
 
 - Polish the documentation landing page layout, spacing, and responsive overflow behavior.
