@@ -36,7 +36,7 @@ const youtube = new YouTube({
 | `failFast` | `boolean` | `false` | Fails if remote session setup fails instead of using local fallback data. |
 | `retrieveInnertubeConfig` | `boolean` | `true` | Retrieves YouTube's Innertube configuration during session setup. |
 | `fetch` | `FetchFn` | `globalThis.fetch` | Replaces the network implementation. Cannot be combined with `proxy`. |
-| `proxy` | `string \| URL` | None | Node.js HTTP or HTTPS forward-proxy URL used for every request in the client session. |
+| `proxy` | `string \| URL` | None | Node.js or Bun HTTP/HTTPS forward-proxy URL used for every request in the client session. |
 | `timeoutMillis` | `number` | `20_000` | Per-request timeout in milliseconds. |
 | `retries` | `number` | `2` | Retry attempts for transient failures. |
 
@@ -75,9 +75,9 @@ wait.
 
 ## Proxy
 
-In Node.js, pass an HTTP or HTTPS forward-proxy URL directly. Credentials are
-supported through standard URL authentication syntax and should be supplied by
-an environment variable, not committed to source control.
+In Node.js or Bun, pass an HTTP or HTTPS forward-proxy URL directly. Credentials
+are supported through standard URL authentication syntax and should be supplied
+by an environment variable, not committed to source control.
 
 ```ts
 const youtube = new YouTube({
@@ -85,11 +85,14 @@ const youtube = new YouTube({
 });
 ```
 
-The SDK creates one proxy agent lazily and reuses it until `youtube.close()`.
-That keeps session setup, player metadata, and caption downloads on the same
-egress identity. Proxy URLs using other protocols, including `socks:`, are
-rejected explicitly. A proxy can improve compatibility with an upstream
-network, but it does not bypass YouTube access controls or guarantee playback.
+On Node.js the SDK creates one proxy agent lazily and reuses it until
+`youtube.close()`. On Bun it uses Bun's native proxy transport for every fetch.
+Both paths keep session setup, player metadata, and caption downloads on the
+configured egress identity. Other runtimes fail during configuration instead of
+silently sending requests directly. Proxy URLs using other protocols, including
+`socks:`, are rejected explicitly. A proxy can improve compatibility with an
+upstream network, but it does not bypass YouTube access controls or guarantee
+playback.
 
 ## Custom fetch
 

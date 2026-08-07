@@ -46,7 +46,7 @@ export interface YouTubeOptions {
   readonly fetch?: FetchFn;
   /**
    * HTTP or HTTPS forward proxy used by every request in this client session.
-   * Node.js only. Cannot be combined with a custom `fetch` implementation.
+   * Supported in Node.js and Bun. Cannot be combined with a custom `fetch`.
    */
   readonly proxy?: string | URL;
   /** Per-request timeout in milliseconds. Defaults to 20 000. */
@@ -87,7 +87,7 @@ const randomUserAgent = (): string =>
 const proxyDispose = Symbol("just-yt/proxyDispose");
 
 type ProxiedFetch = FetchFn & {
-  readonly [proxyDispose]: () => Promise<void>;
+  readonly [proxyDispose]?: () => Promise<void>;
 };
 
 const normalizeProxy = (proxy: string | URL): string => {
@@ -106,12 +106,37 @@ const normalizeProxy = (proxy: string | URL): string => {
   return url.toString();
 };
 
-/**
- * Creates one lazy proxy agent for the lifetime of a Config layer. Keeping the
- * agent stable also keeps session setup, player calls, and caption downloads on
- * the same egress identity.
- */
+const isBun = (): boolean =>
+  typeof process !== "undefined" && process.versions.bun !== undefined;
+
+const isNode = (): boolean =>
+  typeof process !== "undefined" && process.versions.node !== undefined;
+
+/** Creates a runtime-native proxy transport for every request in the session. */
 const makeProxiedFetch = (proxy: string): ProxiedFetch => {
+  if (isBun()) {
+    return async (input, init) => {
+      try {
+        return await globalThis.fetch(input, {
+          ...init,
+          // Bun exposes proxying as a fetch extension rather than through an
+          // Undici dispatcher.
+          proxy,
+        } as RequestInit);
+      } catch {
+        // As on Node, never let a proxy URL containing credentials escape in a
+        // runtime-specific error or nested cause.
+        throw new Error("Request through the configured proxy failed");
+      }
+    };
+  }
+
+  if (!isNode()) {
+    throw new TypeError(
+      "proxy is supported only in the Node.js and Bun runtimes",
+    );
+  }
+
   let agent: Promise<ProxyAgent> | undefined;
 
   const getAgent = (): Promise<ProxyAgent> =>

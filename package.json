@@ -34,6 +34,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "test": "tsx --test test/*.test.ts",
+    "test:bun": "bun test test/*.test.ts",
     "docs:dev": "pnpm --filter just-yt-docs dev",
     "docs:dev:background": "pnpm --dir docs exec astro dev --background --host 0.0.0.0",
     "docs:status": "pnpm --dir docs exec astro dev status",

@@ -75,10 +75,11 @@ const yt = new YouTube({
 ```
 
 `proxy` accepts an HTTP or HTTPS forward-proxy URL, including URL-encoded
-credentials, in Node.js. The same proxy agent is reused until `yt.close()` so
-all requests in the session keep a consistent egress identity. Keep proxy URLs
-in environment variables rather than source control. Use `fetch` instead when
-you need custom transport behavior; `proxy` and `fetch` cannot be combined.
+credentials, in Node.js and Bun. Node reuses one proxy agent until `yt.close()`;
+Bun uses its native per-request proxy transport. In either runtime, all requests
+in the session keep the configured egress identity. Keep proxy URLs in
+environment variables rather than source control. Use `fetch` instead when you
+need custom transport behavior; `proxy` and `fetch` cannot be combined.
 
 ### Effect API
 

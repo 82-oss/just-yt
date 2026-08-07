@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
-import { createServer, type Server } from "node:http";
+import {
+  createServer,
+  request as httpRequest,
+  type Server,
+} from "node:http";
 import { connect } from "node:net";
 import test from "node:test";
 import { Effect } from "effect";
@@ -32,10 +36,35 @@ test("proxy tunnels requests and sends configured authentication", async () => {
 
   let connections = 0;
   let authorization: string | undefined;
-  const proxy = createServer();
-  proxy.on("connect", (request, clientSocket, head) => {
+  const recordProxyRequest = (value: string | undefined) => {
     connections += 1;
-    authorization = request.headers["proxy-authorization"];
+    authorization = value;
+  };
+
+  // Bun sends HTTP targets as absolute-form proxy requests. Undici uses a
+  // CONNECT tunnel, so the test proxy deliberately supports both forms.
+  const proxy = createServer((request, response) => {
+    recordProxyRequest(request.headers["proxy-authorization"]);
+    const destination = new URL(request.url ?? "");
+    const headers = { ...request.headers };
+    delete headers["proxy-authorization"];
+    delete headers["proxy-connection"];
+
+    const upstream = httpRequest(
+      destination,
+      { method: request.method, headers },
+      (upstreamResponse) => {
+        response.writeHead(
+          upstreamResponse.statusCode ?? 500,
+          upstreamResponse.headers,
+        );
+        upstreamResponse.pipe(response);
+      },
+    );
+    request.pipe(upstream);
+  });
+  proxy.on("connect", (request, clientSocket, head) => {
+    recordProxyRequest(request.headers["proxy-authorization"]);
 
     const [host, rawPort] = (request.url ?? "").split(":");
     const upstream = connect(Number(rawPort), host, () => {
@@ -81,6 +110,27 @@ test("proxy validates its URL and cannot be combined with fetch", () => {
   assert.throws(
     () => resolveConfig({ proxy: "http://127.0.0.1:8080", fetch }),
     /proxy and fetch cannot be configured together/,
+  );
+});
+
+test("proxy failures do not expose credentials", async () => {
+  const request = Effect.gen(function* () {
+    const config = yield* Config;
+    return yield* Effect.promise(() => config.fetch("https://example.com"));
+  }).pipe(
+    Effect.provide(
+      Config.layer({
+        proxy: "http://proxy-user:proxy-secret@127.0.0.1:1",
+      }),
+    ),
+  );
+
+  await assert.rejects(
+    Effect.runPromise(request),
+    (error) =>
+      error instanceof Error &&
+      error.message === "Request through the configured proxy failed" &&
+      !String(error).includes("proxy-secret"),
   );
 });
 
