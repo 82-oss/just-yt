@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.8 — 2026-08-07
+
+- Add bounded-concurrency bulk lookups for videos, channels, and transcripts with ordered, per-target success and failure results.
+
 ## 0.0.7 — 2026-08-06
 
 - Reworked the documentation site. `/` now serves the opening page directly
