@@ -31,8 +31,11 @@ const more = await yt.search("effect ts", { continuation: page.continuation });
 
 // Transcripts
 const transcript = await yt.transcript("dQw4w9WgXcQ", { language: "en" });
-transcript.text; // full text
-transcript.segments; // [{ startMs, endMs, startSeconds, endSeconds, text }, …]
+transcript.title; // video title
+transcript.data; // complete transcript with blank lines between segments
+
+const timed = await yt.transcript("dQw4w9WgXcQ", { segmented: true });
+timed.data; // [{ start, end, text }, …], with timestamps in seconds
 
 // Channels — by handle, id, or URL
 const channel = await yt.channel("@veritasium");

@@ -5,6 +5,8 @@ import {
   type BatchResult,
   type ChannelsOptions,
   type SearchOptions,
+  type SegmentedTranscriptOptions,
+  type SegmentedTranscriptsOptions,
   type TranscriptsOptions,
   type TranscriptOptions,
   type VideosOptions,
@@ -16,6 +18,7 @@ import type { YouTubeOptions } from "./config.js";
 import type {
   ChannelDetails,
   SearchPage,
+  SegmentedTranscript,
   Transcript,
   VideoDetails,
 } from "./domain.js";
@@ -93,17 +96,34 @@ export class YouTube {
   /** Timed transcript for a video, when one is published. */
   transcript(
     target: string,
-    options?: TranscriptOptions,
-  ): Promise<Transcript> {
-    return this.#run((yt) => yt.transcript(target, options));
+    options: SegmentedTranscriptOptions,
+  ): Promise<SegmentedTranscript>;
+  transcript(target: string, options?: TranscriptOptions): Promise<Transcript>;
+  transcript(
+    target: string,
+    options?: TranscriptOptions | SegmentedTranscriptOptions,
+  ): Promise<Transcript | SegmentedTranscript> {
+    return options?.segmented === true
+      ? this.#run((yt) => yt.transcript(target, options))
+      : this.#run((yt) => yt.transcript(target, options));
   }
 
   /** Timed transcripts for many videos, with failures captured per target. */
   transcripts(
     targets: ReadonlyArray<string>,
+    options: SegmentedTranscriptsOptions,
+  ): Promise<ReadonlyArray<BatchResult<SegmentedTranscript>>>;
+  transcripts(
+    targets: ReadonlyArray<string>,
     options?: TranscriptsOptions,
-  ): Promise<ReadonlyArray<BatchResult<Transcript>>> {
-    return this.#run((yt) => yt.transcripts(targets, options));
+  ): Promise<ReadonlyArray<BatchResult<Transcript>>>;
+  transcripts(
+    targets: ReadonlyArray<string>,
+    options?: TranscriptsOptions | SegmentedTranscriptsOptions,
+  ): Promise<ReadonlyArray<BatchResult<Transcript | SegmentedTranscript>>> {
+    return options?.segmented === true
+      ? this.#run((yt) => yt.transcripts(targets, options))
+      : this.#run((yt) => yt.transcripts(targets, options));
   }
 
   /** Channel metadata for a channel id, `@handle`, or channel URL. */

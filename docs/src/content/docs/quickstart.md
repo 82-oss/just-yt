@@ -124,12 +124,25 @@ a human-written track when possible, then falls back to an auto-generated one.
 ```ts
 const transcript = await youtube.transcript('dQw4w9WgXcQ');
 
-console.log(transcript.text);
+console.log(transcript.title);
+console.log(transcript.data);
+```
 
-for (const segment of transcript.segments) {
-  console.log(segment.startSeconds, segment.endSeconds, segment.text);
+The default `data` is one string with a blank line between caption segments.
+For timestamped data, request segmented output:
+
+```ts
+const transcript = await youtube.transcript('dQw4w9WgXcQ', {
+  segmented: true,
+});
+
+for (const segment of transcript.data) {
+  console.log(segment.start, segment.end, segment.text);
 }
 ```
+
+Both modes normalize each segment to one line and remove YouTube's `>>`
+speaker markers.
 
 Ask for a language by its code or by the caption name shown by YouTube:
 

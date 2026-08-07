@@ -18,8 +18,8 @@ const main = async (): Promise<void> => {
   console.log(`${channel.title} — ${channel.subscriberCountText ?? "?"}`);
 
   const transcript = await yt.transcript("youtu.be/jNQXAC9IVRw");
-  console.log(`${transcript.segments.length} transcript segments`);
-  console.log(transcript.text.slice(0, 200));
+  console.log(transcript.title);
+  console.log(transcript.data.slice(0, 200));
 
   await yt.close();
 };

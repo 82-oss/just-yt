@@ -1,5 +1,10 @@
-import type { TranscriptSegment } from "../../domain.js";
 import { getArray, getNumber, getString, isObject } from "../json.js";
+
+export interface TimedTextSegment {
+  readonly startMs: number;
+  readonly endMs: number;
+  readonly text: string;
+}
 
 /**
  * Transcripts are read from the timed-text endpoint referenced by the player
@@ -19,7 +24,7 @@ export const timedTextUrl = (baseUrl: string, translateTo?: string): URL => {
   return url;
 };
 
-const fromJson3 = (payload: unknown): ReadonlyArray<TranscriptSegment> =>
+const fromJson3 = (payload: unknown): ReadonlyArray<TimedTextSegment> =>
   getArray(payload, "events").flatMap((event) => {
     const segs = getArray(event, "segs");
     if (segs.length === 0) return [];
@@ -38,8 +43,6 @@ const fromJson3 = (payload: unknown): ReadonlyArray<TranscriptSegment> =>
       {
         startMs,
         endMs: startMs + durationMs,
-        startSeconds: startMs / 1_000,
-        endSeconds: (startMs + durationMs) / 1_000,
         text,
       },
     ];
@@ -69,7 +72,7 @@ const decodeXmlText = (value: string): string =>
  * Some caption tracks ignore `fmt=json3` and answer with XML anyway, so both
  * formats have to be understood.
  */
-const fromXml = (payload: string): ReadonlyArray<TranscriptSegment> => {
+const fromXml = (payload: string): ReadonlyArray<TimedTextSegment> => {
   const matches = payload.matchAll(
     /<p\s+t="(\d+)"(?:\s+d="(\d+)")?[^>]*>([\s\S]*?)<\/p>/g,
   );
@@ -85,8 +88,6 @@ const fromXml = (payload: string): ReadonlyArray<TranscriptSegment> => {
       {
         startMs,
         endMs: startMs + durationMs,
-        startSeconds: startMs / 1_000,
-        endSeconds: (startMs + durationMs) / 1_000,
         text,
       },
     ];
@@ -96,7 +97,7 @@ const fromXml = (payload: string): ReadonlyArray<TranscriptSegment> => {
 /** Parses a timed-text response in whichever format it arrived. */
 export const parseTimedText = (
   payload: string,
-): ReadonlyArray<TranscriptSegment> => {
+): ReadonlyArray<TimedTextSegment> => {
   const trimmed = payload.trimStart();
 
   if (trimmed.startsWith("{")) {
@@ -110,3 +111,10 @@ export const parseTimedText = (
 
   return fromXml(payload);
 };
+
+/** Removes caption rendering markers and normalizes a segment to plain text. */
+export const cleanTranscriptText = (text: string): string =>
+  text
+    .replace(/(^|\s)>>\s*/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
