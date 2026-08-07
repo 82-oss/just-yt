@@ -483,7 +483,7 @@ const makeYouTube = Effect.gen(function* () {
 
       return options.segmented === true
         ? { title, data }
-        : { title, data: data.map((segment) => segment.text).join("\n\n") };
+        : { title, data: data.map((segment) => segment.text).join(" ") };
     })) as TranscriptLookup;
 
   const channel: YouTubeService["channel"] = (target) =>

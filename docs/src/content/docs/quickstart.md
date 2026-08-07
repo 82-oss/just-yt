@@ -128,8 +128,8 @@ console.log(transcript.title);
 console.log(transcript.data);
 ```
 
-The default `data` is one string with a blank line between caption segments.
-For timestamped data, request segmented output:
+The default `data` is one whitespace-normalized paragraph with caption segments
+separated by a single space. For timestamped data, request segmented output:
 
 ```ts
 const transcript = await youtube.transcript('dQw4w9WgXcQ', {

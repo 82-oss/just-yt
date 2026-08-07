@@ -32,7 +32,7 @@ const more = await yt.search("effect ts", { continuation: page.continuation });
 // Transcripts
 const transcript = await yt.transcript("dQw4w9WgXcQ", { language: "en" });
 transcript.title; // video title
-transcript.data; // complete transcript with blank lines between segments
+transcript.data; // complete transcript as one normalized paragraph
 
 const timed = await yt.transcript("dQw4w9WgXcQ", { segmented: true });
 timed.data; // [{ start, end, text }, …], with timestamps in seconds

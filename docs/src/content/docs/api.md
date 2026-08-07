@@ -104,9 +104,9 @@ interface SegmentedTranscriptOptions {
 
 `language` matches a caption track by language code or displayed name. Without
 it, the SDK prefers a human-written track and then an auto-generated track.
-The default result contains the complete transcript as a string. Set
-`segmented: true` to receive timestamped segments instead. Both modes remove
-caption line breaks and YouTube's `>>` speaker markers.
+The default result contains the complete transcript as one whitespace-normalized
+paragraph. Set `segmented: true` to receive timestamped segments instead. Both
+modes remove caption line breaks and YouTube's `>>` speaker markers.
 
 ### `transcripts(targets, options?)`
 

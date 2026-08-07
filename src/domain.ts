@@ -122,7 +122,7 @@ export interface TranscriptSegment {
   readonly text: string;
 }
 
-/** A complete transcript with readable paragraph breaks and no timestamps. */
+/** A complete transcript as one whitespace-normalized paragraph. */
 export interface Transcript {
   readonly title: string;
   readonly data: string;
