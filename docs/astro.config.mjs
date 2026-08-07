@@ -50,7 +50,7 @@ export default defineConfig({
   markdown: {
     shikiConfig: {
       theme: codeTheme,
-      wrap: false,
+      wrap: true,
     },
     processor: satteri({
       // `directive` powers `:::tabs` and the callouts; see src/lib/markdown-plugins.mjs.

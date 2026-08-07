@@ -29,7 +29,7 @@ const { code, lang = 'ts', title } = Astro.props;
 <figure class="panel code-card" data-code-card>
   {title && <figcaption class="panel-title">{title}</figcaption>}
 
-  <Code code={code.trim()} lang={lang} theme={codeTheme} />
+  <Code code={code.trim()} lang={lang} theme={codeTheme} wrap />
 
   <button class="code-copy" type="button" data-code-copy aria-label="Copy code to clipboard">
     <Icon name="copy" class="icon copy-idle" />
@@ -61,7 +61,10 @@ const { code, lang = 'ts', title } = Astro.props;
   /* `<Code>` writes the `<pre>`, so it never carries this file's scope hash.
      Anchored to the wrapper so the rule can't reach the docs' blocks. */
   .panel :global(pre.astro-code) {
-    overflow-x: auto;
+    overflow-x: hidden !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
     margin: 0;
     /* Right padding keeps the last column clear of the copy button. */
     padding: 20px 52px 20px 20px;

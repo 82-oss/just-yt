@@ -412,8 +412,8 @@ html {
 
 /*
  * Every fenced block is wrapped in `<figure class="code-card">` by
- * src/lib/markdown-plugins.mjs, which owns the frame; the `<pre>` inside is
- * only ever the scrolling surface.
+ * src/lib/markdown-plugins.mjs, which owns the frame; the `<pre>` inside wraps
+ * long lines instead of scrolling horizontally.
  */
 .prose .code-card {
   position: relative;
@@ -435,7 +435,11 @@ html {
 }
 
 .prose pre.astro-code {
-  overflow-x: auto;
+  /* Shiki still emits overflow-x: auto when wrap is enabled — override it. */
+  overflow-x: hidden !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere;
+  word-wrap: break-word;
   margin: 0;
   /* Right padding keeps the last column clear of the copy button. */
   padding: 18px 52px 18px 20px;
