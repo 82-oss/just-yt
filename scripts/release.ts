@@ -1,7 +1,7 @@
 import { readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
-import { Data, Effect } from "effect";
+import { Data, Duration, Effect } from "effect";
 
 type ReleaseType = "patch" | "minor" | "major";
 
@@ -50,6 +50,19 @@ const commandSucceeds = (name: string, args: string[]) =>
     } catch {
       return false;
     }
+  });
+
+const commandEventuallySucceeds = (
+  name: string,
+  args: string[],
+  attempts = 10,
+) =>
+  Effect.gen(function* () {
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      if (yield* commandSucceeds(name, args)) return true;
+      if (attempt < attempts) yield* Effect.sleep(Duration.seconds(3));
+    }
+    return false;
   });
 
 const bump = (version: string, type: ReleaseType) => {
@@ -170,7 +183,12 @@ const publishRelease = Effect.gen(function* () {
     yield* command("npm", ["publish", "--provenance", "--access", "public"]);
   }
 
-  const published = yield* commandSucceeds("npm", ["view", `${name}@${version}`, "version"]);
+  // npm's write endpoint can succeed a few seconds before registry reads see
+  // the new version. Poll before declaring a successful publish missing.
+  const published = yield* commandEventuallySucceeds(
+    "npm",
+    ["view", `${name}@${version}`, "version"],
+  );
   if (!published) {
     return yield* Effect.fail(new ReleaseError({
       message: `${name}@${version} was not found on npm after publishing`
