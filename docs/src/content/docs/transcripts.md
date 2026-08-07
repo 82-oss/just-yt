@@ -14,8 +14,8 @@ search, analysis, summaries, and accessibility workflows.
 ```ts
 const transcript = await yt.transcript('dQw4w9WgXcQ');
 
-transcript.title; // 'Rick Astley - Never Gonna Give You Up (Official Video)'
-transcript.data; // "We're no strangers to love You know the rules and I've been…"
+transcript.title; // 'Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)'
+transcript.data; // "[♪♪♪] ♪ We're no strangers to love ♪ ♪ You know the rules and so do I ♪…"
 ```
 
 By default, `data` is one whitespace-normalized paragraph. The SDK removes
@@ -24,15 +24,16 @@ human-written track, then falls back to an auto-generated track.
 
 ## Ask for a language
 
-Use a language code or the displayed track name:
+Use a language code or the displayed track name. Either one has to match a
+published track exactly, so a regional track is `es-419`, not `es`:
 
 ```ts
 const spanish = await yt.transcript('dQw4w9WgXcQ', {
-  language: 'es',
+  language: 'es-419',
 });
 
-spanish.title; // 'Rick Astley - Never Gonna Give You Up (Official Video)'
-spanish.data; // Spanish caption text as one normalized paragraph
+spanish.title; // 'Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)'
+spanish.data; // 'Conocemos bien el amor Tú conoces las reglas, igual que yo…'
 ```
 
 If no matching track exists, the Promise rejects with `NotFoundError`. The
@@ -48,7 +49,8 @@ const transcript = await yt.transcript('dQw4w9WgXcQ', {
   segmented: true,
 });
 
-transcript.data[0]; // { start: 18.0, end: 21.5, text: "We're no strangers to love" }
+transcript.data[0]; // { start: 1.36, end: 3.04, text: '[♪♪♪]' }
+transcript.data[1]; // { start: 18.64, end: 21.88, text: "♪ We're no strangers to love ♪" }
 
 for (const segment of transcript.data) {
   console.log(segment.start, segment.end, segment.text);

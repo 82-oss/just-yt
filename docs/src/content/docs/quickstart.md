@@ -21,7 +21,7 @@ const video = await yt.video('jNQXAC9IVRw');
 
 console.log(video.title); // Me at the zoo
 console.log(video.channel.name); // jawed
-console.log(video.viewCount); // 403130789
+console.log(video.viewCount); // 403522943
 
 await yt.close();
 ```
@@ -73,7 +73,7 @@ try {
   const channel = await yt.channel(video.channel.id!);
 
   console.log(video.title, channel.title);
-  // → Me at the zoo Veritasium
+  // → Me at the zoo jawed
 } finally {
   await yt.close();
 }

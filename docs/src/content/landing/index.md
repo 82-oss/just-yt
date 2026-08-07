@@ -46,7 +46,7 @@ const yt = new YouTube();
 const video = await yt.video('jNQXAC9IVRw');
 
 video.title; // 'Me at the zoo'
-video.viewCount; // 403130789
+video.viewCount; // 403522943
 video.channel.handle; // '@jawed'
 ```
 :::
@@ -66,8 +66,8 @@ const page = await yt.search('effect ts', {
   features: ['hd', 'subtitles'],
 });
 
-page.results[0].title; // 'Effect.ts Tutorial'
-page.results[0].viewCount; // 128000
+page.results[0].title; // 'Stop the agent slop with Effect | Maxwell Brown'
+page.results[0].viewCount; // 1396
 
 const many = await yt.search('effect ts', {
   limit: 100,
@@ -87,14 +87,14 @@ const text = await yt.transcript(id, {
   language: 'en',
 });
 
-text.title; // 'Rick Astley - Never Gonna Give You Up (Official Video)'
-text.data; // "We're no strangers to love You know the rules and I've been…"
+text.title; // 'Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)'
+text.data; // "[♪♪♪] ♪ We're no strangers to love ♪ ♪ You know the rules and so do I ♪…"
 
 const timed = await yt.transcript(id, {
   segmented: true,
 });
 
-timed.data[0]; // { start: 18.0, end: 21.5, text: "We're no strangers to love" }
+timed.data[0]; // { start: 1.36, end: 3.04, text: '[♪♪♪]' }
 ```
 :::
 

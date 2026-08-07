@@ -22,8 +22,8 @@ const results = await yt.videos([
 ]);
 
 results[0].value.title; // 'Me at the zoo'
-results[1].value.title; // 'Never Gonna Give You Up'
-results[2].value.title; // 'Big Buck Bunny'
+results[1].value.title; // 'Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)'
+results[2].value.title; // 'Big Buck Bunny 60fps 4K - Official Blender Foundation Short Film'
 ```
 
 Plural methods use a concurrency of `2` by default. At most two complete target

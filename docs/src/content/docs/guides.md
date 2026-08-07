@@ -88,7 +88,7 @@ for (const result of results) {
     // → 'Me at the zoo', …
   } else {
     console.warn(result.target, result.error._tag);
-    // → 'deletedVideoId' 'NotFoundError'
+    // → 'aaaaaaaaaaa' 'UnavailableError'
   }
 }
 ```

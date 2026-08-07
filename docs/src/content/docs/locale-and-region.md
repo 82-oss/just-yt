@@ -24,7 +24,7 @@ const yt = new YouTube({
 | --- | --- | --- |
 | `lang` | YouTube interface language, sent as `hl`. | `'en'` |
 | `location` | Two-letter region, sent as `gl`. | `'US'` |
-| `timezone` | IANA timezone used in the request context. | Host timezone |
+| `timezone` | IANA timezone used in the request context. | `'America/New_York'` |
 | `enableSafetyMode` | Requests YouTube's restricted mode. | `false` |
 
 Use an IANA timezone such as `Europe/London` or `America/New_York`, not a

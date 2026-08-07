@@ -20,8 +20,8 @@ const yt = new YouTube();
 // Videos — id, watch URL, youtu.be, /shorts/, /embed/, /live/
 const video = await yt.video("https://www.youtube.com/watch?v=jNQXAC9IVRw");
 video.title; // "Me at the zoo"
-video.viewCount; // 403130789
-video.likeCount; // 19300458
+video.viewCount; // 403522943
+video.likeCount; // 19314561
 video.channel.handle; // "@jawed"
 
 // Search — one page by default, or set a limit to follow continuations
@@ -56,7 +56,7 @@ for (const result of videos) {
 
 // Autocomplete
 const suggestions = await yt.suggestions("effect t");
-// → ["effect ts", "effect typescript", "effect tutorial"]
+// → ["effect ts", "effect tour bowling ball", "effect typescript", …]
 
 await yt.close();
 ```

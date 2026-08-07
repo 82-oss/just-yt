@@ -45,7 +45,8 @@ thirty thousand milliseconds, or thirty seconds.
 
 ## Defaults are part of the design
 
-With no options, the SDK uses English, the US region, your host timezone, the
+With no options, the SDK uses English, the US region, the Eastern US
+timezone (`America/New_York`), the
 `WEB` client profile, a 20-second timeout, and two retry attempts. It creates
 anonymous session data and falls back to local session data when bootstrap is
 unavailable.

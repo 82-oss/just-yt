@@ -14,8 +14,8 @@ use their IDs with the more detailed video and channel methods.
 ```ts
 const page = await yt.search('learn typescript');
 
-page.results[0].title; // 'TypeScript Tutorial for Beginners'
-page.results[0].url; // 'https://www.youtube.com/watch?v=…'
+page.results[0].title; // 'TypeScript in 100 Seconds'
+page.results[0].url; // 'https://www.youtube.com/watch?v=zQnBQ4tB3ZA'
 
 for (const result of page.results) {
   console.log(result.title, result.url);
@@ -56,7 +56,7 @@ const page = await yt.search('learn typescript', {
   limit: 25,
 });
 
-page.results.length; // up to 25
+page.results.length; // at most 25 — narrow filters often return far fewer
 page.results[0].type; // 'video'
 ```
 
@@ -78,7 +78,7 @@ Suggestions are simple strings:
 
 ```ts
 const suggestions = await yt.suggestions('type scr');
-// → ['typescript', 'typescript tutorial', 'typescript crash course']
+// → ['typescript', 'typescript tutorial', 'typescript basics', …]
 
 for (const suggestion of suggestions) {
   console.log(suggestion);

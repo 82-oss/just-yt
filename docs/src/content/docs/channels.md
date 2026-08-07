@@ -27,8 +27,8 @@ const channel = await yt.channel('@veritasium');
 
 channel.title; // 'Veritasium'
 channel.handle; // '@veritasium'
-channel.subscriberCountText; // '21M subscribers'
-channel.links[0].title; // 'Twitter'
+channel.subscriberCountText; // '21.1M subscribers'
+channel.links[0]; // { title: 'Elements of Truth - The Game', url: 've42.co/YTBio' }
 ```
 
 The result can include thumbnails, a banner, subscriber and video counts,

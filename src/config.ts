@@ -12,7 +12,7 @@ export interface YouTubeOptions {
   readonly lang?: string;
   /** Geolocation, sent as `gl`. Defaults to `"US"`. */
   readonly location?: string;
-  /** IANA time zone. Defaults to the host's. */
+  /** IANA time zone. Defaults to `"America/New_York"`. */
   readonly timezone?: string;
   /** User-agent for requests that do not mandate a client-specific one. */
   readonly userAgent?: string;
@@ -73,13 +73,7 @@ export interface ResolvedConfig {
   readonly retries: number;
 }
 
-const defaultTimezone = (): string => {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
-  } catch {
-    return "UTC";
-  }
-};
+const DEFAULT_TIMEZONE = "America/New_York";
 
 const randomUserAgent = (): string =>
   DESKTOP_USER_AGENTS[Math.floor(Math.random() * DESKTOP_USER_AGENTS.length)];
@@ -180,7 +174,7 @@ export const resolveConfig = (options: YouTubeOptions = {}): ResolvedConfig => {
   return {
     lang: options.lang ?? "en",
     location: options.location ?? "US",
-    timezone: options.timezone ?? defaultTimezone(),
+    timezone: options.timezone ?? DEFAULT_TIMEZONE,
     userAgent: options.userAgent ?? randomUserAgent(),
     client: options.client ?? "WEB",
     visitorData: options.visitorData,
