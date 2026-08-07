@@ -1,4 +1,7 @@
 // @ts-check
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, fontProviders } from 'astro/config';
 import { satteri } from '@astrojs/markdown-satteri';
 import { codeTheme } from './src/lib/code-theme.mjs';
@@ -9,6 +12,9 @@ import {
   docChromePlugin,
   tableScrollPlugin,
 } from './src/lib/markdown-plugins.mjs';
+
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+const sdkVersion = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')).version;
 
 // https://astro.build/config
 export default defineConfig({
@@ -55,6 +61,9 @@ export default defineConfig({
   },
 
   vite: {
+    define: {
+      __JUST_YT_VERSION__: JSON.stringify(sdkVersion),
+    },
     server: {
       allowedHosts: ['kenobi'],
     },

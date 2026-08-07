@@ -2,7 +2,6 @@
   "name": "just-yt-docs",
   "private": true,
   "type": "module",
-  "version": "0.0.5",
   "engines": {
     "node": ">=22.12.0"
   },

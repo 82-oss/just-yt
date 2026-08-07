@@ -1,10 +1,9 @@
-import { readFileSync } from 'node:fs';
+declare const __JUST_YT_VERSION__: string;
 
 /**
- * The published package version, read from the SDK's own manifest at build
- * time. The docs sat on a hand-copied version string for two releases; the
- * footer is not worth a step in the release checklist.
+ * The published package version, injected from the repo root `package.json`
+ * when Astro starts. A runtime `readFileSync` against `import.meta.url` breaks
+ * once Vite bundles the module — the relative path then lands on
+ * `docs/package.json` instead of the SDK manifest.
  */
-export const VERSION: string = JSON.parse(
-  readFileSync(new URL('../../../package.json', import.meta.url), 'utf8'),
-).version;
+export const VERSION: string = __JUST_YT_VERSION__;
