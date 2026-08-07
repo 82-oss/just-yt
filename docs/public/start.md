@@ -18,9 +18,8 @@ First, inspect the current directory without changing it.
   feature. You may offer an isolated YouTube test/example as the default, but do
   not add it until they agree.
 
-Keep the first change small. Do not add authentication, downloads, private or
-members-only access, or anti-abuse bypasses. `just-yt` is for public YouTube
-metadata and captions.
+Keep the first change small. Do not add authentication, downloads, private
+or members-only access. `just-yt` is for public YouTube metadata and captions.
 
 ## 2. Read only the documentation you need
 

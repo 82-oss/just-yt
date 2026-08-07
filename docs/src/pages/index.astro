@@ -30,12 +30,15 @@ const links = await getLandingNavLinks();
 
 <style>
   .landing-content {
+    position: relative;
+    width: 100%;
     max-width: none;
+    overflow-x: clip;
   }
 
   .badge {
     position: absolute;
-    top: calc(var(--topbar-h) + clamp(40px, 7vh, 80px));
+    top: clamp(40px, 7vh, 80px);
     left: 50%;
     z-index: 2;
     display: inline-flex;
@@ -63,6 +66,10 @@ const links = await getLandingNavLinks();
   }
 
   :global(.landing-hero) {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
     padding: calc(clamp(40px, 7vh, 80px) + 62px) var(--content-pad) clamp(48px, 7vh, 88px);
     text-align: center;
   }
@@ -78,6 +85,7 @@ const links = await getLandingNavLinks();
   }
 
   :global(.landing-hero > p:first-of-type) {
+    width: min(54ch, 100%);
     max-width: 54ch;
     margin: 26px auto 0;
     color: var(--muted);
@@ -88,6 +96,7 @@ const links = await getLandingNavLinks();
 
   :global(.hero-onramp) {
     display: grid;
+    width: 100%;
     justify-items: center;
     gap: 16px;
     margin: 34px auto 0;
@@ -156,7 +165,7 @@ const links = await getLandingNavLinks();
     background: transparent;
     color: var(--text);
     font-size: var(--text-sm);
-    font-weight: 600;
+    font-weight: 500;
   }
 
   :global(.hero-agent-panel) {
@@ -236,7 +245,7 @@ const links = await getLandingNavLinks();
     font-size: var(--text-xs);
   }
 
-  :global(.landing-hero > p:last-of-type),
+  :global(.landing-hero > p:has(> a)),
   :global(.landing-closing > p:last-of-type) {
     display: flex;
     flex-wrap: wrap;
@@ -245,7 +254,7 @@ const links = await getLandingNavLinks();
     margin: 36px 0 0;
   }
 
-  :global(.landing-hero > p:last-of-type a),
+  :global(.landing-hero > p:has(> a) a),
   :global(.landing-closing > p:last-of-type a) {
     display: inline-flex;
     align-items: center;
@@ -261,14 +270,14 @@ const links = await getLandingNavLinks();
       opacity 0.15s ease;
   }
 
-  :global(.landing-hero > p:last-of-type a:first-child),
+  :global(.landing-hero > p:has(> a) a:first-child),
   :global(.landing-closing > p:last-of-type a:first-child) {
     border-color: var(--text);
     background: var(--text);
     color: var(--bg);
   }
 
-  :global(.landing-hero > p:last-of-type a:hover),
+  :global(.landing-hero > p:has(> a) a:hover),
   :global(.landing-closing > p:last-of-type a:hover) {
     opacity: 0.88;
   }
@@ -305,6 +314,10 @@ const links = await getLandingNavLinks();
       transparent 100%
     );
     pointer-events: none;
+  }
+
+  :global(.landing-hero + .landing-feature::before) {
+    content: none;
   }
 
   :global(.landing-feature h2) {
