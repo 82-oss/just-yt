@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.10 — 2026-08-07
+
+- Make automated releases retryable and verify npm publication before creating the GitHub Release.
+
 ## 0.0.9 — 2026-08-07
 
 - Document the repository workflow for synchronizing CI-created release commits before starting new work.
