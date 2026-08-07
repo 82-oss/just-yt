@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.13 — 2026-08-07
+
+- Add first-class, session-scoped HTTP and HTTPS proxy support through the `proxy` constructor option, and report refused transcript requests as unavailable with YouTube's playability reason.
+
 ## 0.0.12 — 2026-08-07
 
 - Return transcripts as titled text by default or clean timestamped segments with the `segmented` option.
