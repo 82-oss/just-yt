@@ -15,6 +15,8 @@ const changesDir = join(root, ".changes");
 const packagePath = join(root, "package.json");
 const changelogPath = join(root, "CHANGELOG.md");
 const dryRun = process.argv.includes("--dry-run");
+const prepare = process.argv.includes("--prepare") || dryRun;
+const publish = process.argv.includes("--publish");
 
 const read = (path: string) =>
   Effect.tryPromise({
@@ -38,6 +40,16 @@ const command = (name: string, args: string[]) =>
   Effect.try({
     try: () => execFileSync(name, args, { cwd: root, encoding: "utf8", stdio: "pipe" }).trim(),
     catch: (cause: unknown) => new ReleaseError({ message: `Command failed: ${name} ${args.join(" ")}`, cause })
+  });
+
+const commandSucceeds = (name: string, args: string[]) =>
+  Effect.sync(() => {
+    try {
+      execFileSync(name, args, { cwd: root, stdio: "ignore" });
+      return true;
+    } catch {
+      return false;
+    }
   });
 
 const bump = (version: string, type: ReleaseType) => {
@@ -78,7 +90,7 @@ const sortChangelog = (contents: string) => {
   return `${preamble}\n\n${entries.map((entry) => entry.content).join("\n\n")}\n`;
 };
 
-const program = Effect.gen(function* () {
+const prepareRelease = Effect.gen(function* () {
   const files = (yield* Effect.tryPromise({
     try: () => readdir(changesDir),
     catch: (cause) => new ReleaseError({ message: "Could not read .changes", cause })
@@ -119,6 +131,13 @@ const program = Effect.gen(function* () {
   yield* Effect.sync(() => console.log(`Preparing ${tag} (${type}) from ${files.length} changeset(s).`));
   if (dryRun) return;
 
+  const tagExists = yield* commandSucceeds("git", ["rev-parse", "--verify", `refs/tags/${tag}`]);
+  if (tagExists) {
+    yield* command("git", ["checkout", "--detach", tag]);
+    yield* Effect.sync(() => console.log(`${tag} is already prepared; reusing the existing tag.`));
+    return;
+  }
+
   yield* write(packagePath, `${JSON.stringify({ ...packageJson, version }, null, 2)}\n`);
   yield* write(changelogPath, sortChangelog(`${existing.trimEnd()}\n\n${entry}`));
   yield* Effect.forEach(changes, (change) => remove(join(changesDir, change.file)));
@@ -128,7 +147,48 @@ const program = Effect.gen(function* () {
   yield* command("git", ["commit", "-m", `chore(release): ${tag}`]);
   yield* command("git", ["tag", "--annotate", tag, "--message", tag]);
   yield* command("git", ["push", "origin", "main", tag]);
-  yield* command("npm", ["publish", "--provenance", "--access", "public"]);
+});
+
+const publishRelease = Effect.gen(function* () {
+  const packageJson = JSON.parse(yield* read(packagePath)) as { name: string; version: string };
+  const { name, version } = packageJson;
+  const tag = `v${version}`;
+  const expectedTag = (yield* command("git", ["tag", "--points-at", "HEAD"]))
+    .split("\n")
+    .includes(tag);
+
+  if (!expectedTag) {
+    return yield* Effect.fail(new ReleaseError({
+      message: `Refusing to publish ${name}@${version}: HEAD is not tagged ${tag}`
+    }));
+  }
+
+  const alreadyPublished = yield* commandSucceeds("npm", ["view", `${name}@${version}`, "version"]);
+  if (alreadyPublished) {
+    yield* Effect.sync(() => console.log(`${name}@${version} is already on npm; skipping publish.`));
+  } else {
+    yield* command("npm", ["publish", "--provenance", "--access", "public"]);
+  }
+
+  const published = yield* commandSucceeds("npm", ["view", `${name}@${version}`, "version"]);
+  if (!published) {
+    return yield* Effect.fail(new ReleaseError({
+      message: `${name}@${version} was not found on npm after publishing`
+    }));
+  }
+
+  const releaseExists = yield* commandSucceeds("gh", ["release", "view", tag]);
+  if (releaseExists) {
+    yield* Effect.sync(() => console.log(`GitHub Release ${tag} already exists; skipping creation.`));
+    return;
+  }
+
+  const changelog = yield* read(changelogPath);
+  const escapedVersion = version.replace(/\./g, "\\.");
+  const entry = changelog.match(
+    new RegExp(`^## ${escapedVersion}(?:\\s+—[^\\n]*)?\\n\\n([\\s\\S]*?)(?=\\n## |$)`, "m")
+  );
+  const notes = entry?.[1]?.trim() ?? `Release ${tag}`;
 
   const releaseNotes = join(root, `.release-notes-${version}.md`);
   yield* write(releaseNotes, `## What's Changed\n\n${notes}\n`);
@@ -136,6 +196,14 @@ const program = Effect.gen(function* () {
   yield* remove(releaseNotes);
   yield* Effect.sync(() => console.log(`Released ${tag}.`));
 });
+
+const program = prepare === publish
+  ? Effect.fail(new ReleaseError({
+      message: "Choose exactly one release mode: --prepare, --publish, or --dry-run"
+    }))
+  : prepare
+    ? prepareRelease
+    : publishRelease;
 
 Effect.runPromise(program).catch((error) => {
   if (error instanceof ReleaseError) {

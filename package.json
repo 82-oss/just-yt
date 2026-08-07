@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/spheceo/just-yt.git"
+    "url": "git+https://github.com/82-oss/just-yt.git"
   },
   "keywords": [
     "youtube",
@@ -39,7 +39,8 @@
     "docs:stop": "pnpm --dir docs exec astro dev stop",
     "docs:build": "pnpm --filter just-yt-docs build",
     "example:basic": "tsx examples/basic.ts",
-    "release": "tsx scripts/release.ts",
+    "release:prepare": "tsx scripts/release.ts --prepare",
+    "release:publish": "tsx scripts/release.ts --publish",
     "release:dry": "tsx scripts/release.ts --dry-run",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm typecheck && pnpm build"
