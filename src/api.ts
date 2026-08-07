@@ -79,6 +79,33 @@ export interface TranscriptOptions {
   readonly client?: ClientType;
 }
 
+export interface BatchOptions {
+  /**
+   * Maximum number of targets processed at once. Defaults to `2` and is capped
+   * at `4` so bulk lookups do not create an unbounded request burst.
+   */
+  readonly concurrency?: 1 | 2 | 3 | 4;
+}
+
+export interface VideosOptions extends VideoOptions, BatchOptions {}
+
+export interface TranscriptsOptions extends TranscriptOptions, BatchOptions {}
+
+export interface ChannelsOptions extends BatchOptions {}
+
+/** The outcome of one target in a bulk lookup. */
+export type BatchResult<A> =
+  | {
+      readonly ok: true;
+      readonly target: string;
+      readonly value: A;
+    }
+  | {
+      readonly ok: false;
+      readonly target: string;
+      readonly error: YouTubeError;
+    };
+
 export interface YouTubeService {
   /**
    * Runs a search. Returns one page unless `limit` asks for more, in which case
@@ -110,16 +137,34 @@ export interface YouTubeService {
     options?: VideoOptions,
   ) => Effect.Effect<VideoDetails, YouTubeError>;
 
+  /** Full metadata for many videos, with failures captured per target. */
+  readonly videos: (
+    targets: ReadonlyArray<string>,
+    options?: VideosOptions,
+  ) => Effect.Effect<ReadonlyArray<BatchResult<VideoDetails>>>;
+
   /** Timed transcript for a video, when one is published. */
   readonly transcript: (
     target: string,
     options?: TranscriptOptions,
   ) => Effect.Effect<Transcript, YouTubeError>;
 
+  /** Timed transcripts for many videos, with failures captured per target. */
+  readonly transcripts: (
+    targets: ReadonlyArray<string>,
+    options?: TranscriptsOptions,
+  ) => Effect.Effect<ReadonlyArray<BatchResult<Transcript>>>;
+
   /** Channel metadata for a channel id, `@handle`, or channel URL. */
   readonly channel: (
     target: string,
   ) => Effect.Effect<ChannelDetails, YouTubeError>;
+
+  /** Metadata for many channels, with failures captured per target. */
+  readonly channels: (
+    targets: ReadonlyArray<string>,
+    options?: ChannelsOptions,
+  ) => Effect.Effect<ReadonlyArray<BatchResult<ChannelDetails>>>;
 }
 
 /**
@@ -450,6 +495,51 @@ const makeYouTube = Effect.gen(function* () {
       return yield* extractChannelDetails(response, about);
     });
 
+  const runBatch = <A>(
+    targets: ReadonlyArray<string>,
+    concurrency: BatchOptions["concurrency"],
+    operation: (target: string) => Effect.Effect<A, YouTubeError>,
+  ): Effect.Effect<ReadonlyArray<BatchResult<A>>> =>
+    Effect.forEach(
+      targets,
+      (target) =>
+        operation(target).pipe(
+          Effect.match({
+            onSuccess: (value): BatchResult<A> => ({
+              ok: true,
+              target,
+              value,
+            }),
+            onFailure: (error): BatchResult<A> => ({
+              ok: false,
+              target,
+              error,
+            }),
+          }),
+        ),
+      { concurrency: Math.max(1, Math.min(concurrency ?? 2, 4)) },
+    );
+
+  const videos: YouTubeService["videos"] = (targets, options = {}) => {
+    const { concurrency, ...videoOptions } = options;
+    return runBatch(targets, concurrency, (target) =>
+      video(target, videoOptions),
+    );
+  };
+
+  const transcripts: YouTubeService["transcripts"] = (
+    targets,
+    options = {},
+  ) => {
+    const { concurrency, ...transcriptOptions } = options;
+    return runBatch(targets, concurrency, (target) =>
+      transcript(target, transcriptOptions),
+    );
+  };
+
+  const channels: YouTubeService["channels"] = (targets, options = {}) =>
+    runBatch(targets, options.concurrency, channel);
+
   // Touching the session here surfaces creation failures when the layer is
   // built, rather than on the first call.
   yield* Effect.logDebug(
@@ -461,8 +551,11 @@ const makeYouTube = Effect.gen(function* () {
     searchStream,
     suggestions,
     video,
+    videos,
     transcript,
+    transcripts,
     channel,
+    channels,
   } satisfies YouTubeService;
 });
 

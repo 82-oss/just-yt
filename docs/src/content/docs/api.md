@@ -65,6 +65,21 @@ interface VideoOptions {
 `live` URL. `basic: true` skips enrichment from `/next`, which can omit like
 count, comment count, subscriber count, and channel avatar.
 
+### `videos(targets, options?)`
+
+```ts
+videos(
+  targets: readonly string[],
+  options?: VideosOptions,
+): Promise<readonly BatchResult<VideoDetails>[]>
+
+interface VideosOptions extends VideoOptions, BatchOptions {}
+```
+
+Processes several video IDs or URLs with bounded concurrency. Results have the
+same order and length as `targets`; one failed video does not reject or cancel
+the other lookups.
+
 ### `transcript(target, options?)`
 
 ```ts
@@ -79,6 +94,20 @@ interface TranscriptOptions {
 `language` matches a caption track by language code or displayed name. Without
 it, the SDK prefers a human-written track and then an auto-generated track.
 
+### `transcripts(targets, options?)`
+
+```ts
+transcripts(
+  targets: readonly string[],
+  options?: TranscriptsOptions,
+): Promise<readonly BatchResult<Transcript>[]>
+
+interface TranscriptsOptions extends TranscriptOptions, BatchOptions {}
+```
+
+Processes several transcripts while capturing missing captions and other
+target-specific failures on the corresponding result item.
+
 ### `channel(target)`
 
 ```ts
@@ -86,6 +115,42 @@ channel(target: string): Promise<ChannelDetails>
 ```
 
 Accepts a channel ID beginning with `UC`, an `@handle`, or a channel URL.
+
+### `channels(targets, options?)`
+
+```ts
+channels(
+  targets: readonly string[],
+  options?: ChannelsOptions,
+): Promise<readonly BatchResult<ChannelDetails>[]>
+
+interface ChannelsOptions extends BatchOptions {}
+```
+
+Processes several channel IDs, handles, or URLs with ordered, per-target
+results.
+
+### Bulk options and results
+
+All plural lookup methods default to two active targets. Concurrency is the
+number of complete target operations in flight, not a division into fixed-size
+batches. It can be lowered to `1` or raised as high as `4`.
+
+```ts
+interface BatchOptions {
+  concurrency?: 1 | 2 | 3 | 4;
+}
+
+type BatchResult<T> =
+  | { ok: true; target: string; value: T }
+  | { ok: false; target: string; error: YouTubeError };
+```
+
+As soon as one target finishes, the next target starts in its place. Expected
+lookup errors—including unavailable resources, exhausted network retries, and
+extraction failures—are returned on the affected item. The overall operation
+can still fail when its shared infrastructure cannot run, such as when session
+initialization fails.
 
 ### `close()`
 

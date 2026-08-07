@@ -2,8 +2,12 @@ import { Cause, Effect, Exit, ManagedRuntime, Option } from "effect";
 import {
   YouTubeApi,
   layer,
+  type BatchResult,
+  type ChannelsOptions,
   type SearchOptions,
+  type TranscriptsOptions,
   type TranscriptOptions,
+  type VideosOptions,
   type VideoOptions,
   type YouTubeService,
   type YouTubeStack,
@@ -74,6 +78,18 @@ export class YouTube {
     return this.#run((yt) => yt.video(target, options));
   }
 
+  /**
+   * Full metadata for many videos. Results stay aligned to the input targets,
+   * and an unavailable target is returned as a failed item instead of rejecting
+   * the entire lookup.
+   */
+  videos(
+    targets: ReadonlyArray<string>,
+    options?: VideosOptions,
+  ): Promise<ReadonlyArray<BatchResult<VideoDetails>>> {
+    return this.#run((yt) => yt.videos(targets, options));
+  }
+
   /** Timed transcript for a video, when one is published. */
   transcript(
     target: string,
@@ -82,9 +98,25 @@ export class YouTube {
     return this.#run((yt) => yt.transcript(target, options));
   }
 
+  /** Timed transcripts for many videos, with failures captured per target. */
+  transcripts(
+    targets: ReadonlyArray<string>,
+    options?: TranscriptsOptions,
+  ): Promise<ReadonlyArray<BatchResult<Transcript>>> {
+    return this.#run((yt) => yt.transcripts(targets, options));
+  }
+
   /** Channel metadata for a channel id, `@handle`, or channel URL. */
   channel(target: string): Promise<ChannelDetails> {
     return this.#run((yt) => yt.channel(target));
+  }
+
+  /** Channel metadata for many targets, with failures captured per target. */
+  channels(
+    targets: ReadonlyArray<string>,
+    options?: ChannelsOptions,
+  ): Promise<ReadonlyArray<BatchResult<ChannelDetails>>> {
+    return this.#run((yt) => yt.channels(targets, options));
   }
 
   /** Releases the session and any work still in flight. */

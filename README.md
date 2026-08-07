@@ -39,6 +39,18 @@ const channel = await yt.channel("@veritasium");
 channel.subscriberCount; // 21100000
 channel.joinedDateText; // "Joined Jul 21, 2010"
 
+// Bulk lookups — two targets at a time by default, configurable up to four.
+// Every input gets an ordered success or failure result.
+const videos = await yt.videos([
+  "jNQXAC9IVRw",
+  "https://youtu.be/dQw4w9WgXcQ",
+], { concurrency: 2 });
+
+for (const result of videos) {
+  if (result.ok) console.log(result.target, result.value.title);
+  else console.warn(result.target, result.error._tag);
+}
+
 // Autocomplete
 const suggestions = await yt.suggestions("effect t");
 
@@ -98,6 +110,10 @@ yt.searchStream("effect ts", { type: "video" }).pipe(
 ## Errors
 
 Every failure is a tagged error — `NetworkError`, `SessionError`, `InnertubeError`, `ExtractionError`, `NotFoundError`, `UnavailableError` — usable with `Effect.catchTag` or, on the Promise API, by checking `error._tag`. `ExtractionError` is the one to watch: it means YouTube reshaped a response, and its `path` field points at where extraction gave up.
+
+Bulk lookups capture expected failures on their individual result items rather
+than rejecting the whole operation. The overall Promise rejects only when the
+batch itself cannot run, such as a session initialization failure.
 
 ## Scope
 

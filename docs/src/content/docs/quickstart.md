@@ -86,6 +86,36 @@ mode when you prefer a faster request and do not need those fields:
 const basicVideo = await youtube.video('jNQXAC9IVRw', { basic: true });
 ```
 
+## Read several videos safely
+
+Plural lookup methods process two targets at a time by default. Set
+`concurrency` from `1` through `4` to control how many complete target
+operations can be active at once.
+
+```ts
+const results = await youtube.videos(
+  [
+    'jNQXAC9IVRw',
+    'https://youtu.be/dQw4w9WgXcQ',
+    'an unavailable video id',
+  ],
+  { concurrency: 2 },
+);
+
+for (const result of results) {
+  if (result.ok) {
+    console.log(result.target, result.value.title);
+  } else {
+    console.warn(result.target, result.error._tag);
+  }
+}
+```
+
+The returned array remains aligned with the input array even when requests
+finish out of order. A deleted video, timeout, or extraction error becomes a
+failed result item and does not discard successful items. `channels()` and
+`transcripts()` provide the same behavior for their respective resource types.
+
 ## Read a transcript
 
 `transcript` uses the caption tracks published for a video. By default it picks
