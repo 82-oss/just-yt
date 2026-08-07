@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.9 — 2026-08-07
+
+- Document the repository workflow for synchronizing CI-created release commits before starting new work.
+
 ## 0.0.8 — 2026-08-07
 
 - Add bounded-concurrency bulk lookups for videos, channels, and transcripts with ordered, per-target success and failure results.
