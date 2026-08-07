@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.16 — 2026-08-07
+
+- Polish the documentation landing page layout, spacing, and responsive overflow behavior.
+
 ## 0.0.15 — 2026-08-07
 
 - Return non-segmented transcripts as one whitespace-normalized paragraph with a single space between caption segments.

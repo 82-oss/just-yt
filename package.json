@@ -1,6 +1,6 @@
 {
   "name": "just-yt",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "A typed TypeScript SDK for extracting public data from YouTube.",
   "license": "MIT",
   "repository": {
