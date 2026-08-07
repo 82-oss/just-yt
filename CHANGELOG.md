@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.12 — 2026-08-07
+
+- Return transcripts as titled text by default or clean timestamped segments with the `segmented` option.
+
 ## 0.0.11 — 2026-08-07
 
 - Wait for npm registry propagation when verifying a newly published release.
