@@ -14,6 +14,7 @@
 
 ## Git and release workflow
 
+- Before making changes on `main`, run `git pull --ff-only` to synchronize release commits created by CI. If the worktree has local changes or the pull cannot fast-forward, stop and inspect instead of merging automatically.
 - Make meaningful changes in the current branch. Small changes do not require a commit; after a significant set of changes, use a Conventional Commit message such as `feat(parser): add caption extraction` or `fix(client): handle unavailable videos`.
 - Do not push unless the user explicitly asks. By default, commit and push to `main`; create and use a separate branch only when the user asks for one, and switch branches only when the user explicitly instructs it.
 - Any changes pushed directly to `main` must include a `.changes/<description>.md` file with `type: patch` by default. Create a `minor` changeset only when the user requests a minor release, and a `major` changeset only when the user explicitly requests a major release.
