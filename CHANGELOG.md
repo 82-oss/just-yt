@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.15 — 2026-08-07
+
+- Return non-segmented transcripts as one whitespace-normalized paragraph with a single space between caption segments.
+
 ## 0.0.14 — 2026-08-07
 
 - Route proxy-enabled requests through Bun's native fetch proxy support while retaining the session-scoped Undici transport on Node.js, and reject unsupported runtimes instead of silently bypassing the proxy.
