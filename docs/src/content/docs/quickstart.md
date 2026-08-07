@@ -16,14 +16,14 @@ Create a file named `example.ts` and add:
 ```ts title="example.ts"
 import { YouTube } from 'just-yt';
 
-const youtube = new YouTube();
-const video = await youtube.video('jNQXAC9IVRw');
+const yt = new YouTube();
+const video = await yt.video('jNQXAC9IVRw');
 
 console.log(video.title);
 console.log(video.channel.name);
 console.log(video.viewCount);
 
-await youtube.close();
+await yt.close();
 ```
 
 Run the file with your runtime:
@@ -43,7 +43,7 @@ npx tsx example.ts
 `new YouTube()` creates a client. It does not contact YouTube yet. The first
 method call creates a session, and later calls reuse that same session.
 
-`youtube.video(...)` accepts either an 11-character video ID or a common
+`yt.video(...)` accepts either an 11-character video ID or a common
 YouTube URL. It returns a Promise, so `await` pauses this function until the
 result is ready.
 
@@ -66,15 +66,15 @@ missing value from becoming a misleading value in your application.
 If your script makes more requests, do them before `close()`:
 
 ```ts
-const youtube = new YouTube();
+const yt = new YouTube();
 
 try {
-  const video = await youtube.video('jNQXAC9IVRw');
-  const channel = await youtube.channel(video.channel.id!);
+  const video = await yt.video('jNQXAC9IVRw');
+  const channel = await yt.channel(video.channel.id!);
 
   console.log(video.title, channel.title);
 } finally {
-  await youtube.close();
+  await yt.close();
 }
 ```
 

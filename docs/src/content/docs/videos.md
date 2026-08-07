@@ -12,8 +12,8 @@ than a search result provides.
 ## IDs and URLs both work
 
 ```ts
-const byId = await youtube.video('jNQXAC9IVRw');
-const byUrl = await youtube.video(
+const byId = await yt.video('jNQXAC9IVRw');
+const byUrl = await yt.video(
   'https://www.youtube.com/watch?v=jNQXAC9IVRw',
 );
 ```
@@ -24,7 +24,7 @@ accepted. Internally, the SDK extracts the video ID before requesting metadata.
 ## Read the result
 
 ```ts
-const video = await youtube.video('jNQXAC9IVRw');
+const video = await yt.video('jNQXAC9IVRw');
 
 console.log({
   title: video.title,
@@ -48,7 +48,7 @@ likes, comments, channel subscribers, and the channel avatar.
 When those values do not matter, basic mode skips the enrichment request:
 
 ```ts
-const video = await youtube.video('jNQXAC9IVRw', { basic: true });
+const video = await yt.video('jNQXAC9IVRw', { basic: true });
 ```
 
 Basic mode is useful for a quick lookup or a large job that only needs core
@@ -58,7 +58,7 @@ type.
 ## Read several videos
 
 ```ts
-const results = await youtube.videos(videoIds, { concurrency: 2 });
+const results = await yt.videos(videoIds, { concurrency: 2 });
 ```
 
 Use the plural method when each target should succeed or fail independently.

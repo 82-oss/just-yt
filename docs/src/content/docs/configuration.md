@@ -10,7 +10,7 @@ Every constructor option is optional. The simplest and usually best starting
 point is:
 
 ```ts
-const youtube = new YouTube();
+const yt = new YouTube();
 ```
 
 Configuration should answer a real need. A Spanish search result needs locale
@@ -33,7 +33,7 @@ This client asks for South African results and gives each request 30 seconds:
 ```ts
 import { YouTube } from 'just-yt';
 
-const youtube = new YouTube({
+const yt = new YouTube({
   location: 'ZA',
   timezone: 'Africa/Johannesburg',
   timeoutMillis: 30_000,

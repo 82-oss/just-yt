@@ -60,9 +60,9 @@ Create a small file and ask TypeScript to resolve the import:
 ```ts title="check.ts"
 import { YouTube } from 'just-yt';
 
-const youtube = new YouTube();
-console.log(youtube);
-await youtube.close();
+const yt = new YouTube();
+console.log(yt);
+await yt.close();
 ```
 
 If your editor recognizes `YouTube`, installation is complete. If it does not,

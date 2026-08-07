@@ -15,7 +15,7 @@ transcripts to read.
 Use `videos()` instead of manually starting many `video()` calls:
 
 ```ts
-const results = await youtube.videos([
+const results = await yt.videos([
   'jNQXAC9IVRw',
   'dQw4w9WgXcQ',
   'aqz-KE-bpKQ',
@@ -39,7 +39,7 @@ B; it starts as soon as one place is free.
 You can choose from `1` through `4`:
 
 ```ts
-const results = await youtube.videos(videoIds, { concurrency: 3 });
+const results = await yt.videos(videoIds, { concurrency: 3 });
 ```
 
 | Value | When it is useful |

@@ -1,4 +1,4 @@
-import { YouTube } from "../src/index.js";
+import { YouTube } from "just-yt";
 
 const main = async (): Promise<void> => {
   const yt = new YouTube();

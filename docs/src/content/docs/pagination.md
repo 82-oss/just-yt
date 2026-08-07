@@ -14,7 +14,7 @@ more results exist, a continuation token that points to the next page.
 For a known, modest number of results, set `limit`:
 
 ```ts
-const page = await youtube.search('typescript tutorial', {
+const page = await yt.search('typescript tutorial', {
   type: 'video',
   limit: 25,
 });
@@ -31,7 +31,7 @@ Omit `limit` to fetch one page. Pass the returned token back unchanged:
 let continuation: string | undefined;
 
 do {
-  const page = await youtube.search('web development', {
+  const page = await yt.search('web development', {
     type: 'video',
     continuation,
   });

@@ -14,7 +14,7 @@ and anonymous session shared by those methods.
 This line only stores configuration and prepares the client:
 
 ```ts
-const youtube = new YouTube({ location: 'ZA' });
+const yt = new YouTube({ location: 'ZA' });
 ```
 
 No request happens until you call `search()`, `video()`, `transcript()`, or
@@ -30,27 +30,27 @@ request repeatedly performs setup and makes the caller's identity drift.
 For a script, create one client near the top:
 
 ```ts
-const youtube = new YouTube();
+const yt = new YouTube();
 
 try {
-  const page = await youtube.search('typescript tutorial');
-  const details = await youtube.video('jNQXAC9IVRw');
+  const page = await yt.search('typescript tutorial');
+  const details = await yt.video('jNQXAC9IVRw');
   console.log(page.results.length, details.title);
 } finally {
-  await youtube.close();
+  await yt.close();
 }
 ```
 
 For a server, create it outside the request handler:
 
 ```ts
-const youtube = new YouTube({ location: 'ZA' });
+const yt = new YouTube({ location: 'ZA' });
 
 export async function GET(request: Request): Promise<Response> {
   const id = new URL(request.url).searchParams.get('id');
   if (!id) return new Response('Missing id', { status: 400 });
 
-  return Response.json(await youtube.video(id));
+  return Response.json(await yt.video(id));
 }
 ```
 
@@ -69,6 +69,6 @@ consistent session.
 
 ## What close does
 
-`await youtube.close()` disposes the managed runtime and resources such as a
+`await yt.close()` disposes the managed runtime and resources such as a
 proxy agent. Treat a closed client as finished; create a new one if a later job
 needs a new session.

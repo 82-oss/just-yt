@@ -17,8 +17,8 @@ import { Effect } from 'effect';
 import { YouTubeApi, layer } from 'just-yt';
 
 const program = Effect.gen(function* () {
-  const youtube = yield* YouTubeApi;
-  return yield* youtube.video('dQw4w9WgXcQ');
+  const yt = yield* YouTubeApi;
+  return yield* yt.video('dQw4w9WgXcQ');
 });
 
 const video = await Effect.runPromise(
@@ -33,9 +33,9 @@ the same `YouTubeOptions` used by the Promise constructor.
 
 ```ts
 const program = Effect.gen(function* () {
-  const youtube = yield* YouTubeApi;
+  const yt = yield* YouTubeApi;
 
-  return yield* youtube.video('dQw4w9WgXcQ').pipe(
+  return yield* yt.video('dQw4w9WgXcQ').pipe(
     Effect.catchTag('UnavailableError', (error) =>
       Effect.succeed({ unavailable: error.reason ?? error.status }),
     ),
@@ -56,9 +56,9 @@ import { Effect, Stream } from 'effect';
 import { YouTubeApi, layer } from 'just-yt';
 
 const program = Effect.gen(function* () {
-  const youtube = yield* YouTubeApi;
+  const yt = yield* YouTubeApi;
 
-  return yield* youtube.searchStream('typescript', { type: 'video' }).pipe(
+  return yield* yt.searchStream('typescript', { type: 'video' }).pipe(
     Stream.take(100),
     Stream.runCollect,
   );

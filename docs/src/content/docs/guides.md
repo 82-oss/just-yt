@@ -16,7 +16,7 @@ JavaScript sends a rejected Promise to `catch`:
 
 ```ts
 try {
-  const transcript = await youtube.transcript(videoId);
+  const transcript = await yt.transcript(videoId);
   console.log(transcript.data);
 } catch (error) {
   console.error('Could not read the transcript', error);
@@ -37,7 +37,7 @@ import {
 } from 'just-yt';
 
 try {
-  return await youtube.transcript(videoId, { language: 'en' });
+  return await yt.transcript(videoId, { language: 'en' });
 } catch (error) {
   if (error instanceof NotFoundError) {
     return null;
@@ -80,7 +80,7 @@ Only return a fallback when it makes sense for your program. The final
 One bad target does not reject or cancel the rest:
 
 ```ts
-const results = await youtube.videos(videoIds);
+const results = await yt.videos(videoIds);
 
 for (const result of results) {
   if (result.ok) {

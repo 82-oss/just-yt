@@ -12,7 +12,7 @@ SDK keeps trying when a temporary failure occurs.
 ## Timeouts and retries
 
 ```ts
-const youtube = new YouTube({
+const yt = new YouTube({
   timeoutMillis: 10_000,
   retries: 4,
 });
@@ -31,13 +31,13 @@ Node.js and Bun can route the entire client session through an HTTP or HTTPS
 forward proxy:
 
 ```ts
-const youtube = new YouTube({
+const yt = new YouTube({
   proxy: process.env.YOUTUBE_PROXY_URL,
 });
 ```
 
 Keep credentials in an environment variable rather than source control. The
-SDK reuses one proxy agent on Node.js and disposes it with `youtube.close()`.
+SDK reuses one proxy agent on Node.js and disposes it with `yt.close()`.
 Bun uses its native proxy transport. Other runtimes reject this option rather
 than silently sending requests directly.
 
@@ -51,7 +51,7 @@ A standard fetch-compatible function is useful for tests, tracing, or a
 runtime-specific transport:
 
 ```ts
-const youtube = new YouTube({
+const yt = new YouTube({
   fetch: async (input, init) => {
     const startedAt = Date.now();
 

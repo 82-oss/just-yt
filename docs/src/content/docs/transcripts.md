@@ -12,7 +12,7 @@ search, analysis, summaries, and accessibility workflows.
 ## Read the complete text
 
 ```ts
-const transcript = await youtube.transcript('dQw4w9WgXcQ');
+const transcript = await yt.transcript('dQw4w9WgXcQ');
 
 console.log(transcript.title);
 console.log(transcript.data);
@@ -27,7 +27,7 @@ human-written track, then falls back to an auto-generated track.
 Use a language code or the displayed track name:
 
 ```ts
-const spanish = await youtube.transcript('dQw4w9WgXcQ', {
+const spanish = await yt.transcript('dQw4w9WgXcQ', {
   language: 'es',
 });
 ```
@@ -41,7 +41,7 @@ picker.
 Set `segmented: true` when your application needs to connect text to playback:
 
 ```ts
-const transcript = await youtube.transcript('dQw4w9WgXcQ', {
+const transcript = await yt.transcript('dQw4w9WgXcQ', {
   segmented: true,
 });
 
@@ -57,7 +57,7 @@ complete text is simpler for full-document analysis.
 ## Read several transcripts
 
 ```ts
-const results = await youtube.transcripts(videoIds, {
+const results = await yt.transcripts(videoIds, {
   language: 'en',
   segmented: true,
   concurrency: 2,

@@ -347,7 +347,7 @@ high-level operation error union.
 import { NotFoundError, UnavailableError } from 'just-yt';
 
 try {
-  await youtube.video(id);
+  await yt.video(id);
 } catch (error) {
   if (error instanceof NotFoundError) return undefined;
   if (error instanceof UnavailableError) {
@@ -368,8 +368,8 @@ import { Effect } from 'effect';
 import { YouTubeApi, layer } from 'just-yt';
 
 const program = Effect.gen(function* () {
-  const youtube = yield* YouTubeApi;
-  return yield* youtube.channel('@veritasium');
+  const yt = yield* YouTubeApi;
+  return yield* yt.channel('@veritasium');
 });
 
 await Effect.runPromise(program.pipe(Effect.provide(layer())));

@@ -13,7 +13,7 @@ required setup.
 ## Visitor data and PO tokens
 
 ```ts
-const youtube = new YouTube({
+const yt = new YouTube({
   visitorData: savedVisitorData,
   poToken: currentPoToken,
 });

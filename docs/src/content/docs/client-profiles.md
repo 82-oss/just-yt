@@ -28,13 +28,13 @@ You can choose a default for one client instance:
 import { YouTube, type ClientType } from 'just-yt';
 
 const client: ClientType = 'IOS';
-const youtube = new YouTube({ client });
+const yt = new YouTube({ client });
 ```
 
 Or override a single video or transcript call:
 
 ```ts
-const video = await youtube.video('dQw4w9WgXcQ', {
+const video = await yt.video('dQw4w9WgXcQ', {
   client: 'TV_EMBEDDED',
 });
 ```

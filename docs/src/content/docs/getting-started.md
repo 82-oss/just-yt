@@ -54,8 +54,8 @@ The Promise API is the best place to begin:
 ```ts
 import { YouTube } from 'just-yt';
 
-const youtube = new YouTube();
-const video = await youtube.video('jNQXAC9IVRw');
+const yt = new YouTube();
+const video = await yt.video('jNQXAC9IVRw');
 
 console.log(video.title);
 ```

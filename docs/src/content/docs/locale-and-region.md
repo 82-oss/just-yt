@@ -13,7 +13,7 @@ text. They do not translate the SDK's property names.
 ## Configure an audience
 
 ```ts
-const youtube = new YouTube({
+const yt = new YouTube({
   lang: 'es',
   location: 'ES',
   timezone: 'Europe/Madrid',

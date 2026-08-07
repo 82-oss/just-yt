@@ -12,7 +12,7 @@ use their IDs with the more detailed video and channel methods.
 ## Run a basic search
 
 ```ts
-const page = await youtube.search('learn typescript');
+const page = await yt.search('learn typescript');
 
 for (const result of page.results) {
   console.log(result.title, result.url);
@@ -44,7 +44,7 @@ video-only property.
 ## Add filters with a purpose
 
 ```ts
-const page = await youtube.search('learn typescript', {
+const page = await yt.search('learn typescript', {
   type: 'video',
   uploadDate: 'month',
   duration: 'medium',
@@ -71,7 +71,7 @@ filter, so still check `result.type` before reading type-specific properties.
 Suggestions are simple strings:
 
 ```ts
-const suggestions = await youtube.suggestions('type scr');
+const suggestions = await yt.suggestions('type scr');
 
 for (const suggestion of suggestions) {
   console.log(suggestion);

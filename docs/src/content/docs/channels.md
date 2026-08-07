@@ -12,9 +12,9 @@ result.
 ## Choose any common target form
 
 ```ts
-const fromHandle = await youtube.channel('@veritasium');
-const fromId = await youtube.channel('UC...');
-const fromUrl = await youtube.channel('https://www.youtube.com/@veritasium');
+const fromHandle = await yt.channel('@veritasium');
+const fromId = await yt.channel('UC...');
+const fromUrl = await yt.channel('https://www.youtube.com/@veritasium');
 ```
 
 A channel ID begins with `UC`. A handle begins with `@`. Passing either form
@@ -23,7 +23,7 @@ directly is clearer than extracting it yourself.
 ## Read public details
 
 ```ts
-const channel = await youtube.channel('@veritasium');
+const channel = await yt.channel('@veritasium');
 
 console.log(channel.title);
 console.log(channel.handle);
@@ -43,7 +43,7 @@ YouTube—for example, a compact localized count.
 ## Read several channels
 
 ```ts
-const results = await youtube.channels(
+const results = await yt.channels(
   ['@veritasium', '@Computerphile', 'UC...'],
   { concurrency: 2 },
 );
