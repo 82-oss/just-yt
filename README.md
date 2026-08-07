@@ -68,11 +68,17 @@ Options go on the constructor:
 const yt = new YouTube({
   lang: "es",
   location: "ES",
-  fetch: myProxiedFetch, // how you route through a proxy today
+  proxy: process.env.YOUTUBE_PROXY_URL,
   timeoutMillis: 30_000,
   retries: 3,
 });
 ```
+
+`proxy` accepts an HTTP or HTTPS forward-proxy URL, including URL-encoded
+credentials, in Node.js. The same proxy agent is reused until `yt.close()` so
+all requests in the session keep a consistent egress identity. Keep proxy URLs
+in environment variables rather than source control. Use `fetch` instead when
+you need custom transport behavior; `proxy` and `fetch` cannot be combined.
 
 ### Effect API
 

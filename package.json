@@ -33,6 +33,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
+    "test": "tsx --test test/*.test.ts",
     "docs:dev": "pnpm --filter just-yt-docs dev",
     "docs:dev:background": "pnpm --dir docs exec astro dev --background --host 0.0.0.0",
     "docs:status": "pnpm --dir docs exec astro dev status",
@@ -52,6 +53,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "effect": "^3.22.1"
+    "effect": "^3.22.1",
+    "undici": "^6.28.0"
   }
 }

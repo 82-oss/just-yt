@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Configure locale, sessions, timeouts, retries, client identities, Proof-of-Origin tokens, and custom fetch behavior.
+description: Configure locale, sessions, proxies, timeouts, retries, client identities, Proof-of-Origin tokens, and custom fetch behavior.
 group: Documentation
 order: 3
 ---
@@ -35,7 +35,8 @@ const youtube = new YouTube({
 | `generateSessionLocally` | `boolean` | `false` | Skips session bootstrap and synthesizes anonymous session data locally. |
 | `failFast` | `boolean` | `false` | Fails if remote session setup fails instead of using local fallback data. |
 | `retrieveInnertubeConfig` | `boolean` | `true` | Retrieves YouTube's Innertube configuration during session setup. |
-| `fetch` | `FetchFn` | `globalThis.fetch` | Replaces the network implementation; also the current way to use a proxy. |
+| `fetch` | `FetchFn` | `globalThis.fetch` | Replaces the network implementation. Cannot be combined with `proxy`. |
+| `proxy` | `string \| URL` | None | Node.js HTTP or HTTPS forward-proxy URL used for every request in the client session. |
 | `timeoutMillis` | `number` | `20_000` | Per-request timeout in milliseconds. |
 | `retries` | `number` | `2` | Retry attempts for transient failures. |
 
@@ -72,10 +73,29 @@ Set `retries: 0` when a queue, job runner, or outer service already controls
 retries. Layering several retry policies can turn a short failure into a long
 wait.
 
-## Custom fetch and proxies
+## Proxy
+
+In Node.js, pass an HTTP or HTTPS forward-proxy URL directly. Credentials are
+supported through standard URL authentication syntax and should be supplied by
+an environment variable, not committed to source control.
+
+```ts
+const youtube = new YouTube({
+  proxy: process.env.YOUTUBE_PROXY_URL,
+});
+```
+
+The SDK creates one proxy agent lazily and reuses it until `youtube.close()`.
+That keeps session setup, player metadata, and caption downloads on the same
+egress identity. Proxy URLs using other protocols, including `socks:`, are
+rejected explicitly. A proxy can improve compatibility with an upstream
+network, but it does not bypass YouTube access controls or guarantee playback.
+
+## Custom fetch
 
 Pass any implementation with the standard fetch signature. A wrapper is useful
-for logging, tests, or routing through your own proxy agent.
+for logging, tests, or a runtime-specific transport. `fetch` and `proxy` cannot
+be configured together because each controls the complete HTTP transport.
 
 ```ts
 const youtube = new YouTube({
@@ -90,9 +110,6 @@ const youtube = new YouTube({
   },
 });
 ```
-
-The SDK does not have a separate `proxy` string option. Configure proxying in
-the fetch implementation you pass.
 
 ## Session identity
 

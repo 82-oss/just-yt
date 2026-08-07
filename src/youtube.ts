@@ -48,8 +48,7 @@ export class YouTube {
   readonly #runtime: ManagedRuntime.ManagedRuntime<YouTubeStack, SetupError>;
 
   /**
-   * @param options - Locale, client identity, timeouts, and the `fetch` to use.
-   *   A custom `fetch` is also how you route through a proxy today.
+   * @param options - Locale, client identity, timeouts, proxy, and transport.
    */
   constructor(options: YouTubeOptions = {}) {
     this.#runtime = ManagedRuntime.make(layer(options));

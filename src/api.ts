@@ -399,11 +399,22 @@ const makeYouTube = Effect.gen(function* () {
       }
 
       const players = yield* fetchPlayer(videoId, options.client);
+      const status = playabilityStatus(players[0]);
       const title = players
         .map((player) => getString(findFirst(player, "videoDetails"), "title"))
         .find((value) => value !== undefined);
 
       if (title === undefined) {
+        if (status !== "OK" && status !== "UNKNOWN") {
+          const reason = playabilityReason(players[0]);
+          return yield* new UnavailableError({
+            message: `Video ${videoId} is not available: ${reason ?? status}`,
+            videoId,
+            status,
+            reason,
+          });
+        }
+
         return yield* new ExtractionError({
           message: `Player response for ${videoId} contained no video title`,
           path: "videoDetails.title",
