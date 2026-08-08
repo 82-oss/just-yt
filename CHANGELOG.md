@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.20 — 2026-08-08
+
+- Make the release publisher rely on the distributable build before publishing.
+
 ## 0.0.19 — 2026-08-08
 
 - Make npm publishing reliable in CI by running validation and builds explicitly before publishing.
