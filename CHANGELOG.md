@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.19 — 2026-08-08
+
+- Make npm publishing reliable in CI by running validation and builds explicitly before publishing.
+
 ## 0.0.18 — 2026-08-08
 
 - Add `recommended()`, which builds a home-page-style feed from video, query, and
