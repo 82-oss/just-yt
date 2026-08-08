@@ -130,6 +130,31 @@ interface SegmentedTranscriptsOptions
 Processes several transcripts while capturing missing captions and other
 target-specific failures on the corresponding result item.
 
+### `recommended(options?)`
+
+```ts
+recommended(options?: RecommendedOptions): Promise<RecommendedFeed>
+
+interface RecommendedOptions extends BatchOptions {
+  videos?: readonly VideoSeed[];
+  queries?: readonly QuerySeed[];
+  channels?: readonly ChannelSeed[];
+  limit?: number;
+  maxPerChannel?: number;
+}
+
+type VideoSeed = string | { video: string; weight?: number };
+type QuerySeed = string | { query: string; weight?: number };
+type ChannelSeed = string | { channel: string; weight?: number };
+```
+
+Builds a feed from the seeds supplied. Every seed kind is optional; a bare
+string is shorthand for a weight of `1`. `limit` defaults to `50` and
+`maxPerChannel` to `3`.
+
+A seed that fails is reported in `skipped` rather than rejecting the call. Seed
+videos never appear among the results.
+
 ### `channel(target)`
 
 ```ts
@@ -303,6 +328,50 @@ interface ChannelDetails {
   isVerified: boolean;
 }
 ```
+
+## Recommended feed model
+
+Feed entries are preview cards. They carry what a listing renderer provides and
+nothing more — resolve an `id` with `video()` for full metadata.
+
+```ts
+interface RecommendedFeed {
+  items: readonly FeedItem[];
+  skipped: readonly SkippedSeed[];
+}
+
+interface FeedItem {
+  id: string;
+  title: string;
+  url: string;
+  thumbnails: readonly Thumbnail[];
+  author?: AuthorRef;
+  durationSeconds?: number;
+  durationText?: string;
+  viewCount?: number;
+  viewCountText?: string;
+  publishedText?: string;
+  isLive: boolean;
+  sources: readonly FeedItemSource[];
+  score: number;
+}
+
+interface FeedItemSource {
+  seed: string;
+  kind: 'video' | 'query' | 'channel';
+  via: 'mix' | 'related' | 'uploads' | 'search';
+}
+
+interface SkippedSeed {
+  seed: string;
+  kind: 'video' | 'query' | 'channel';
+  reason: string;
+}
+```
+
+`score` orders items within one feed and is not comparable between feeds. More
+than one entry in `sources` means separate seeds agreed on the item, which is
+what raises its score.
 
 ## Shared models
 

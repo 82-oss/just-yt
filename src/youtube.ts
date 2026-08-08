@@ -4,6 +4,7 @@ import {
   layer,
   type BatchResult,
   type ChannelsOptions,
+  type RecommendedOptions,
   type SearchOptions,
   type SegmentedTranscriptOptions,
   type SegmentedTranscriptsOptions,
@@ -17,6 +18,7 @@ import {
 import type { YouTubeOptions } from "./config.js";
 import type {
   ChannelDetails,
+  RecommendedFeed,
   SearchPage,
   SegmentedTranscript,
   Transcript,
@@ -123,6 +125,26 @@ export class YouTube {
     return options?.segmented === true
       ? this.#run((yt) => yt.transcripts(targets, options))
       : this.#run((yt) => yt.transcripts(targets, options));
+  }
+
+  /**
+   * Builds a home-page-style feed from seeds you supply.
+   *
+   * ```ts
+   * const feed = await yt.recommended({
+   *   videos: ["aircAruvnKk", { video: "dQw4w9WgXcQ", weight: 0.3 }],
+   *   queries: ["effect ts"],
+   *   channels: ["@veritasium"],
+   * });
+   * ```
+   *
+   * YouTube serves an anonymous session no home feed of its own, so this builds
+   * one: every seed is expanded, and the results are merged, ranked, and capped
+   * so no single channel takes over. Seeds that produce nothing are reported in
+   * `skipped` instead of failing the call.
+   */
+  recommended(options?: RecommendedOptions): Promise<RecommendedFeed> {
+    return this.#run((yt) => yt.recommended(options));
   }
 
   /** Channel metadata for a channel id, `@handle`, or channel URL. */

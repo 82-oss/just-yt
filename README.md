@@ -54,6 +54,21 @@ for (const result of videos) {
   else console.warn(result.target, result.error._tag);
 }
 
+// Recommended — a home-page-style feed built from seeds you supply.
+// YouTube serves an anonymous session no home feed of its own, so this
+// expands each seed, then merges, ranks, and caps the results per channel.
+const feed = await yt.recommended({
+  videos: ["aircAruvnKk", { video: "dQw4w9WgXcQ", weight: 0.3 }],
+  queries: ["effect ts"],
+  channels: ["@veritasium"],
+  limit: 50,
+});
+
+feed.items[0].title; // "Gradient descent, how neural networks learn"
+feed.items[0].score; // 1.9 — ranks within this feed only
+feed.items[0].sources; // which seeds produced it, and via which endpoint
+feed.skipped; // seeds that produced nothing, with the reason
+
 // Autocomplete
 const suggestions = await yt.suggestions("effect t");
 // → ["effect ts", "effect tour bowling ball", "effect typescript", …]
@@ -127,7 +142,7 @@ batch itself cannot run, such as a session initialization failure.
 
 ## Scope
 
-Public metadata only: search, video details, transcripts, and channel details. There is no signature deciphering, format selection, or downloading, and no authenticated access — no OAuth, no cookies, no private or subscriber-only data.
+Public metadata only: search, video details, transcripts, channel details, and seed-built recommendation feeds. There is no signature deciphering, format selection, or downloading, and no authenticated access — no OAuth, no cookies, no private or subscriber-only data.
 
 Anonymous access is not guaranteed. YouTube may refuse individual videos regardless of client identity; a `poToken` improves compatibility on some endpoints but is not a bypass for anti-abuse systems.
 

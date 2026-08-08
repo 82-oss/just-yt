@@ -2,9 +2,12 @@ import { Chunk, Context, Effect, Layer, Option, Stream } from "effect";
 import { Config, type YouTubeOptions } from "./config.js";
 import type {
   ChannelDetails,
+  FeedItemSource,
+  RecommendedFeed,
   SearchPage,
   SearchResult,
   SegmentedTranscript,
+  SkippedSeed,
   Transcript,
   TranscriptSegment,
   VideoDetails,
@@ -23,7 +26,14 @@ import {
   aboutContinuationTokens,
   extractChannelDetails,
 } from "./internal/extract/channel.js";
+import {
+  feedItemsFromLockups,
+  feedItemsFromPanel,
+  feedItemsFromSearch,
+  type RawFeedItem,
+} from "./internal/extract/feed.js";
 import { extractSearchPage, extractSuggestions } from "./internal/extract/search.js";
+import { assembleFeed, type Candidate } from "./internal/recommend.js";
 import {
   cleanTranscriptText,
   parseTimedText,
@@ -97,6 +107,37 @@ export interface BatchOptions {
    * at `4` so bulk lookups do not create an unbounded request burst.
    */
   readonly concurrency?: 1 | 2 | 3 | 4;
+}
+
+/** A video id or URL, optionally weighted. */
+export type VideoSeed =
+  | string
+  | { readonly video: string; readonly weight?: number };
+
+/** A search query, optionally weighted. */
+export type QuerySeed =
+  | string
+  | { readonly query: string; readonly weight?: number };
+
+/** A channel id, `@handle`, or URL, optionally weighted. */
+export type ChannelSeed =
+  | string
+  | { readonly channel: string; readonly weight?: number };
+
+export interface RecommendedOptions extends BatchOptions {
+  /** Videos to find more like. Each contributes its sidebar and its mix. */
+  readonly videos?: ReadonlyArray<VideoSeed>;
+  /** Topics to search for. */
+  readonly queries?: ReadonlyArray<QuerySeed>;
+  /** Channels to pull recent uploads from. */
+  readonly channels?: ReadonlyArray<ChannelSeed>;
+  /** How many items to return. Defaults to `50`. */
+  readonly limit?: number;
+  /**
+   * How many items one channel may contribute, so a prolific uploader cannot
+   * crowd out the rest of the feed. Defaults to `3`.
+   */
+  readonly maxPerChannel?: number;
 }
 
 export interface VideosOptions extends VideoOptions, BatchOptions {}
@@ -186,6 +227,20 @@ export interface YouTubeService {
 
   /** Timed transcripts for many videos, with failures captured per target. */
   readonly transcripts: TranscriptsLookup;
+
+  /**
+   * Builds a home-page-style feed from seeds you supply.
+   *
+   * YouTube has no logged-out home feed to read — `FEwhat_to_watch` answers an
+   * anonymous session with a "start watching to build your feed" placeholder —
+   * so the feed is assembled here: each seed is expanded against YouTube, and
+   * the candidates are merged, scored, and capped per channel.
+   *
+   * A seed that fails is reported in `skipped` rather than failing the feed.
+   */
+  readonly recommended: (
+    options?: RecommendedOptions,
+  ) => Effect.Effect<RecommendedFeed, YouTubeError>;
 
   /** Channel metadata for a channel id, `@handle`, or channel URL. */
   readonly channel: (
@@ -486,34 +541,244 @@ const makeYouTube = Effect.gen(function* () {
         : { title, data: data.map((segment) => segment.text).join(" ") };
     })) as TranscriptLookup;
 
-  const channel: YouTubeService["channel"] = (target) =>
+  /**
+   * Results one seed may contribute before the merge.
+   *
+   * A channel's uploads playlist answers with a hundred videos at once; left
+   * uncapped a single channel seed would dominate the candidate pool no matter
+   * what the per-channel cap does later.
+   */
+  const PER_SEED_LIMIT = 25;
+
+  interface NormalizedSeed {
+    readonly value: string;
+    readonly weight: number;
+    readonly kind: FeedItemSource["kind"];
+  }
+
+  /** Accepts both the bare-string shorthand and the weighted object form. */
+  const normalizeSeeds = (
+    seeds: ReadonlyArray<unknown> | undefined,
+    key: "video" | "query" | "channel",
+  ): ReadonlyArray<NormalizedSeed> =>
+    (seeds ?? []).flatMap((seed) => {
+      const value =
+        typeof seed === "string"
+          ? seed
+          : typeof (seed as Record<string, unknown>)?.[key] === "string"
+            ? ((seed as Record<string, string>)[key] as string)
+            : undefined;
+
+      if (value === undefined || value.trim().length === 0) return [];
+
+      const rawWeight =
+        typeof seed === "object" && seed !== null
+          ? (seed as { weight?: unknown }).weight
+          : undefined;
+
+      // A negative or non-finite weight would invert or poison the ranking.
+      const weight =
+        typeof rawWeight === "number" && Number.isFinite(rawWeight) && rawWeight >= 0
+          ? rawWeight
+          : 1;
+
+      return [{ value, weight, kind: key } satisfies NormalizedSeed];
+    });
+
+  const toCandidates = (
+    items: ReadonlyArray<RawFeedItem>,
+    seed: NormalizedSeed,
+    via: FeedItemSource["via"],
+  ): ReadonlyArray<Candidate> =>
+    items.slice(0, PER_SEED_LIMIT).map((item, rank) => ({
+      item,
+      rank,
+      seedWeight: seed.weight,
+      source: { seed: seed.value, kind: seed.kind, via },
+    }));
+
+  /**
+   * Runs one seed, turning an expected failure into a skip.
+   *
+   * A dead video id or an unreachable channel costs that seed's contribution
+   * and nothing else — the feed is an aggregate, so it degrades rather than
+   * failing outright.
+   */
+  const runSeed = (
+    seed: NormalizedSeed,
+    produce: Effect.Effect<ReadonlyArray<Candidate>, YouTubeError>,
+  ): Effect.Effect<{
+    readonly candidates: ReadonlyArray<Candidate>;
+    readonly skipped?: SkippedSeed;
+  }> =>
+    produce.pipe(
+      Effect.match({
+        onSuccess: (candidates) =>
+          candidates.length > 0
+            ? { candidates }
+            : {
+                candidates: [],
+                skipped: {
+                  seed: seed.value,
+                  kind: seed.kind,
+                  reason: "No results",
+                },
+              },
+        onFailure: (error) => ({
+          candidates: [] as ReadonlyArray<Candidate>,
+          skipped: {
+            seed: seed.value,
+            kind: seed.kind,
+            reason: `${error._tag}: ${error.message}`,
+          },
+        }),
+      }),
+    );
+
+  /**
+   * A video seed contributes two independent lists.
+   *
+   * The sidebar and the video's `RDMM` radio queue overlap surprisingly little,
+   * so taking both widens coverage instead of reinforcing the same picks. The
+   * mix is the stronger signal but is not always populated, and the sidebar is
+   * always there, so a failure in either still leaves the other.
+   */
+  const videoCandidates = (
+    seed: NormalizedSeed,
+  ): Effect.Effect<ReadonlyArray<Candidate>, YouTubeError> =>
+    Effect.gen(function* () {
+      const videoId = parseVideoId(seed.value);
+
+      if (videoId === undefined) {
+        return yield* new NotFoundError({
+          message: `Could not read a video id from "${seed.value}"`,
+          kind: "video",
+          id: seed.value,
+        });
+      }
+
+      const optional = <A>(effect: Effect.Effect<A, YouTubeError>) =>
+        effect.pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+
+      const [related, mix] = yield* Effect.all(
+        [
+          optional(innertube.execute("/next", { videoId }, { client: "WEB" })),
+          optional(
+            innertube.execute(
+              "/next",
+              // `RD` alone only builds a queue for music; `RDMM` works generally.
+              { videoId, playlistId: `RDMM${videoId}` },
+              { client: "WEB" },
+            ),
+          ),
+        ],
+        { concurrency: 2 },
+      );
+
+      // The mix always opens with the seed itself; it is not a recommendation.
+      const mixItems = feedItemsFromPanel(mix).filter(
+        (item) => item.id !== videoId,
+      );
+
+      return [
+        ...toCandidates(feedItemsFromLockups(related), seed, "related"),
+        ...toCandidates(mixItems, seed, "mix"),
+      ];
+    });
+
+  const queryCandidates = (
+    seed: NormalizedSeed,
+  ): Effect.Effect<ReadonlyArray<Candidate>, YouTubeError> =>
+    searchPage(seed.value, { type: "video" }, undefined).pipe(
+      Effect.map((page) =>
+        toCandidates(feedItemsFromSearch(page.results), seed, "search"),
+      ),
+    );
+
+  const channelCandidates = (
+    seed: NormalizedSeed,
+  ): Effect.Effect<ReadonlyArray<Candidate>, YouTubeError> =>
+    Effect.gen(function* () {
+      const browseId = yield* resolveChannelBrowseId(seed.value);
+
+      // Every channel's uploads live in a playlist whose id is its own with
+      // the `UC` prefix swapped for `UU`, newest first.
+      const uploads = `VLUU${browseId.slice(2)}`;
+      const response = yield* innertube.execute("/browse", {
+        browseId: uploads,
+      });
+
+      return toCandidates(feedItemsFromLockups(response), seed, "uploads");
+    });
+
+  const recommended: YouTubeService["recommended"] = (options = {}) =>
+    Effect.gen(function* () {
+      const videoSeeds = normalizeSeeds(options.videos, "video");
+      const querySeeds = normalizeSeeds(options.queries, "query");
+      const channelSeeds = normalizeSeeds(options.channels, "channel");
+
+      const tasks = [
+        ...videoSeeds.map((seed) => runSeed(seed, videoCandidates(seed))),
+        ...querySeeds.map((seed) => runSeed(seed, queryCandidates(seed))),
+        ...channelSeeds.map((seed) => runSeed(seed, channelCandidates(seed))),
+      ];
+
+      if (tasks.length === 0) return { items: [], skipped: [] };
+
+      const outcomes = yield* Effect.all(tasks, {
+        concurrency: Math.max(1, Math.min(options.concurrency ?? 2, 4)),
+      });
+
+      // A seed video is the question, never part of the answer.
+      const exclude = new Set(
+        videoSeeds
+          .map((seed) => parseVideoId(seed.value))
+          .filter((id): id is string => id !== undefined),
+      );
+
+      return {
+        items: assembleFeed(
+          outcomes.flatMap((outcome) => outcome.candidates),
+          {
+            limit: Math.max(1, options.limit ?? 50),
+            maxPerChannel: Math.max(1, options.maxPerChannel ?? 3),
+            exclude,
+          },
+        ),
+        skipped: outcomes.flatMap((outcome) =>
+          outcome.skipped === undefined ? [] : [outcome.skipped],
+        ),
+      };
+    });
+
+  /** Resolves a channel id, `@handle`, or URL to its canonical `UC…` id. */
+  const resolveChannelBrowseId = (
+    target: string,
+  ): Effect.Effect<string, YouTubeError> =>
     Effect.gen(function* () {
       const parsed = parseChannelTarget(target);
+      if (parsed._tag === "browseId") return parsed.browseId;
 
-      const browseId =
-        parsed._tag === "browseId"
-          ? parsed.browseId
-          : yield* Effect.gen(function* () {
-              const resolved = yield* innertube.execute(
-                "/navigation/resolve_url",
-                { url: parsed.url },
-              );
+      const resolved = yield* innertube.execute("/navigation/resolve_url", {
+        url: parsed.url,
+      });
 
-              const id = getString(
-                findFirst(resolved, "browseEndpoint"),
-                "browseId",
-              );
+      const id = getString(findFirst(resolved, "browseEndpoint"), "browseId");
 
-              if (id === undefined) {
-                return yield* new NotFoundError({
-                  message: `Could not resolve "${target}" to a channel`,
-                  kind: "channel",
-                  id: target,
-                });
-              }
+      if (id === undefined) {
+        return yield* new NotFoundError({
+          message: `Could not resolve "${target}" to a channel`,
+          kind: "channel",
+          id: target,
+        });
+      }
 
-              return id;
-            });
+      return id;
+    });
+
+  const channel: YouTubeService["channel"] = (target) =>
+    Effect.gen(function* () {
+      const browseId = yield* resolveChannelBrowseId(target);
 
       const browse = yield* innertube.execute("/browse", { browseId });
 
@@ -608,6 +873,7 @@ const makeYouTube = Effect.gen(function* () {
     videos,
     transcript,
     transcripts,
+    recommended,
     channel,
     channels,
   } satisfies YouTubeService;

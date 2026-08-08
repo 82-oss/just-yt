@@ -116,6 +116,72 @@ export interface VideoDetails {
   readonly playabilityReason?: string;
 }
 
+/** Where a recommended item came from, and which seed produced it. */
+export interface FeedItemSource {
+  /** The seed exactly as it was written in the request. */
+  readonly seed: string;
+  readonly kind: "video" | "query" | "channel";
+  /**
+   * The endpoint the item came out of:
+   *
+   * - `mix` — a `RDMM` radio queue seeded from a video, YouTube's own
+   *   content-similarity stream, and usually the most on-topic source.
+   * - `related` — the watch page sidebar.
+   * - `uploads` — a channel's uploads playlist.
+   * - `search` — search results for a query seed.
+   */
+  readonly via: "mix" | "related" | "uploads" | "search";
+}
+
+/**
+ * One entry in a recommended feed.
+ *
+ * Feeds carry preview cards, not full videos: YouTube sends a title, a channel,
+ * a duration and a couple of count strings per item and nothing more. This is
+ * deliberately a different type from {@link VideoDetails} rather than that type
+ * with everything made optional — pass `id` to `video()` to resolve the rest.
+ */
+export interface FeedItem {
+  readonly id: string;
+  readonly title: string;
+  readonly url: string;
+  readonly thumbnails: ReadonlyArray<Thumbnail>;
+  readonly author?: AuthorRef;
+  readonly durationSeconds?: number;
+  readonly durationText?: string;
+  readonly viewCount?: number;
+  readonly viewCountText?: string;
+  readonly publishedText?: string;
+  readonly isLive: boolean;
+  /**
+   * Every seed and endpoint that produced this item. More than one entry means
+   * separate seeds agreed on it, which is what raises {@link FeedItem.score}.
+   */
+  readonly sources: ReadonlyArray<FeedItemSource>;
+  /**
+   * Relevance, higher first. Seed weight, source quality, and the position
+   * YouTube returned the item at all feed into it, summed across sources.
+   * Comparable within one feed; it carries no meaning between feeds.
+   */
+  readonly score: number;
+}
+
+/** A seed that produced nothing, and why. */
+export interface SkippedSeed {
+  readonly seed: string;
+  readonly kind: "video" | "query" | "channel";
+  readonly reason: string;
+}
+
+export interface RecommendedFeed {
+  readonly items: ReadonlyArray<FeedItem>;
+  /**
+   * Seeds that yielded no candidates. A seed failing costs its own results,
+   * never the feed, so check this when a feed comes back thinner than expected.
+   */
+  readonly skipped: ReadonlyArray<SkippedSeed>;
+}
+
 export interface TranscriptSegment {
   readonly start: number;
   readonly end: number;
