@@ -180,7 +180,14 @@ const publishRelease = Effect.gen(function* () {
   if (alreadyPublished) {
     yield* Effect.sync(() => console.log(`${name}@${version} is already on npm; skipping publish.`));
   } else {
-    yield* command("npm", ["publish", "--provenance", "--access", "public"]);
+    // Build explicitly with pnpm before publishing. npm otherwise runs the
+    // package's prepublishOnly hook inside its own publish process, which can
+    // fail in CI because the package manager environment is nested. The
+    // generated dist directory is included in the package, so npm's lifecycle
+    // scripts are not needed here.
+    yield* command("pnpm", ["typecheck"]);
+    yield* command("pnpm", ["build"]);
+    yield* command("npm", ["publish", "--ignore-scripts", "--provenance", "--access", "public"]);
   }
 
   // npm's write endpoint can succeed a few seconds before registry reads see
